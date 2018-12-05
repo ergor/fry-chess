@@ -1,0 +1,2 @@
+# fry
+Fry Chess Infinity.
