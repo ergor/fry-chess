@@ -1,3 +1,3 @@
 
 main: fry.c
-	gcc -o fry fry.c -Wall
+	gcc -g -o fry fry.c -Wall

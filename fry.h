@@ -22,6 +22,14 @@
 #define BB      'b'     /* black bishop */
 
 
+struct vect {
+    int x;
+    int y;
+};
+
+typedef struct vect m_vect_t;
+typedef struct vect d_vect_t;
+
 struct m_vect {
     int dx;
     int dy;
@@ -33,6 +41,7 @@ struct d_vect {
 };
 
 struct move {
+    int piece;
     int x;
     int y;
 };
