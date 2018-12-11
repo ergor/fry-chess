@@ -21,19 +21,26 @@ print_board()
     for (int y = 0; y < 8; y++) {
         for (int x = 0; x < 8; x++) {
             if ((x+y) & 1)
-                printf("%s %c %s", RST_INVERT, board[x][y], INVERT);
+                printf("%s %c ", RST_INVERT, board[x][y]);
             else
-                printf("%s %c %s", INVERT, board[x][y], RST_INVERT);
+                printf("%s %c ", INVERT, board[x][y]);
         }
-        printf("\n");
+        printf("%s\n", RST_INVERT);
     }
 }
 
-void print_moves(struct move * moves, int len)
+void
+print_moves(struct move * moves, int len)
 {
     for (int i = 0; i < len; i++)
         printf("(%d, %d), ", moves[i].x, moves[i].y);
     printf("\n");
+}
+
+struct move
+san_to_move(char * san)
+{
+    
 }
 
 int
