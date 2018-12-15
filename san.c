@@ -1,0 +1,54 @@
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <regex.h>
+#include <sys/types.h>
+
+#include "fry.h"
+#include "san.h"
+
+struct san_move
+san_to_move(char * san)
+{
+    char msgbuf[1024];
+
+    char piece = 'X';
+    struct pos move = { .x = -1, .y = -1 };
+    
+    regex_t regex;
+    size_t nmatch = 3; /* 0: the whole match, 1: capture group 1, 2: capture group 2 */
+    regmatch_t match[nmatch];
+
+    int reti = regcomp(&regex, "([RNBQK])*x*([a-h][1-8])", REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "failed to compile regex\n");
+        exit(reti);
+    }
+
+    reti = regexec(&regex, san, nmatch, match, 0);
+    if (reti == 0) {
+        regmatch_t r_piece = match[1];
+        regmatch_t r_move = match[2];
+
+        piece = 'P';
+
+        if (r_piece.rm_eo >= 0 || r_piece.rm_so >= 0)
+            piece = san[r_piece.rm_so];
+
+        move.x = san[r_move.rm_so] - 'a';
+        move.y = 7 - (san[r_move.rm_eo - 1] - '1');
+    }
+    else if (reti == REG_NOMATCH) {
+        fprintf(stderr, "no match found\n");
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "regex match failed: %s\n", msgbuf);
+        //exit(reti);
+    }
+
+    regfree(&regex);
+    struct san_move san_move = { .piece = piece, .move = move };
+
+    return san_move;
+}

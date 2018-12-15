@@ -22,14 +22,6 @@
 #define BB      'b'     /* black bishop */
 
 
-struct vect {
-    int x;
-    int y;
-};
-
-typedef struct vect m_vect_t;
-typedef struct vect d_vect_t;
-
 struct m_vect {
     int dx;
     int dy;
@@ -40,84 +32,21 @@ struct d_vect {
     int dy;
 };
 
-struct move {
-    int piece;
-    int x;
-    int y;
-};
-
 struct piece {
     int val;
 };
 
-struct d_vect
-q_dvects[] = {
-    { .dx = -1, .dy =  0 }, /* lateral */
-    { .dx =  1, .dy =  0 },
-    { .dx =  0, .dy = -1 },
-    { .dx =  0, .dy =  1 },
-    { .dx = -1, .dy = -1 }, /* diagonal */
-    { .dx =  1, .dy =  1 },
-    { .dx = -1, .dy =  1 },
-    { .dx =  1, .dy = -1 }
+struct pos {
+    int x;
+    int y;
 };
 
-struct d_vect
-r_dvects[4] = {
-    { .dx = -1, .dy =  0 },
-    { .dx =  1, .dy =  0 },
-    { .dx =  0, .dy = -1 },
-    { .dx =  0, .dy =  1 }
-};
-
-struct d_vect
-b_vects[] = {
-    { .dx = -1, .dy = -1 },
-    { .dx =  1, .dy =  1 },
-    { .dx = -1, .dy =  1 },
-    { .dx =  1, .dy = -1 }
-};
-
-struct m_vect
-wp_mvects[] = {
-    { .dx =  0, .dy =  0 },
-    { .dx = -1, .dy = -1 },
-    { .dx = -0, .dy = -1 },
-    { .dx =  1, .dy = -1 }
-};
-
-struct m_vect
-bp_mvects[] = {
-    { .dx =  0, .dy =  0 },
-    { .dx = -1, .dy =  1 },
-    { .dx = -0, .dy =  1 },
-    { .dx =  1, .dy =  1 }
-};
-
-struct m_vect
-n_mvects[] = {
-    { .dx =  0, .dy =  0 },
-    { .dx = -2, .dy = -1 },
-    { .dx = -2, .dy =  1 },
-    { .dx = -1, .dy = -2 },
-    { .dx = -1, .dy =  2 },
-    { .dx =  1, .dy = -2 },
-    { .dx =  1, .dy =  2 },
-    { .dx =  2, .dy = -1 },
-    { .dx =  2, .dy =  1 }
-};
-
-struct m_vect
-k_mvects[] = {
-    { .dx = -1, .dy = -1 },
-    { .dx =  0, .dy = -1 },
-    { .dx =  1, .dy = -1 },
-    { .dx = -1, .dy =  0 },
-    { .dx =  0, .dy =  0 },
-    { .dx =  1, .dy =  0 },
-    { .dx = -1, .dy =  1 },
-    { .dx =  0, .dy =  1 },
-    { .dx =  1, .dy =  1 }
-};
+extern struct d_vect q_dvects[8];
+extern struct d_vect r_dvects[4];
+extern struct d_vect b_vects[4];
+extern struct m_vect wp_mvects[3];
+extern struct m_vect bp_mvects[3];
+extern struct m_vect n_mvects[8];
+extern struct m_vect k_mvects[8];
 
 #endif

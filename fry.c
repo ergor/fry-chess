@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <sys/types.h>
-#include <regex.h>
 
 #include "fry.h"
+#include "san.h"
+#include "al.h"
 
 /* organized as [x][y] */
 int board[8][8] = {
@@ -55,54 +55,13 @@ print_board()
 }
 
 void
-print_moves(struct move * moves, int len)
+print_moves(int piece, struct pos * moves, int len)
 {
     for (int i = 0; i < len; i++)
-        printf("%c(%d, %d), ", moves[i].piece, moves[i].x, moves[i].y);
+        printf("%c(%d, %d), ", piece, moves[i].x, moves[i].y);
     printf("\n");
 }
 
-struct move
-san_to_move(char * san)
-{
-    //int len = strlen(san);
-    struct move move = { .x = -1, .y = -1 };
-    char msgbuf[1024];
-    regex_t regex;
-    size_t nmatch = 3; /* 0: the whole match, 1: capture group 1, 2: capture group 2 */
-    regmatch_t match[nmatch];
-
-    int reti = regcomp(&regex, "([RNBQK])*x*([a-h][1-8])", REG_EXTENDED);
-    if (reti) {
-        fprintf(stderr, "failed to compile regex\n");
-        exit(reti);
-    }
-
-    reti = regexec(&regex, san, nmatch, match, 0);
-    if (reti == 0) {
-        char piece = 'P';
-        regmatch_t san_piece = match[1];
-        regmatch_t san_move = match[2];
-
-        if (san_piece.rm_eo >= 0 || san_piece.rm_so >= 0)
-            piece = san[san_piece.rm_so];
-
-        move.piece = piece;
-        move.x = san[san_move.rm_so] - 'a';
-        move.y = 7 - (san[san_move.rm_eo - 1] - '1');
-    }
-    else if (reti == REG_NOMATCH) {
-        fprintf(stderr, "no match found\n");
-    }
-    else {
-        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
-        fprintf(stderr, "regex match failed: %s\n", msgbuf);
-        //exit(reti);
-    }
-
-    regfree(&regex);
-    return move;
-}
 
 int
 prospect_move(int x, int y)
@@ -114,21 +73,22 @@ prospect_move(int x, int y)
 /**
  * Finds all legal moves
  * Return: number of moves
- * Args: <out>   moves__out: the legal moves
- *       <in>       m_vects: m_vect movement type vector
- *       <in>           len: length of
+ * Args: <out> moves__out: the legal moves
+ *       <in>     m_vects: m_vect movement type vectors
+ *       <in>         len: number of elements in m_vects
  */
 int
-m_moves(struct move ** moves__out, int orig_x, int orig_y, struct m_vect * m_vects, int len)
+m_moves(struct pos ** moves__out, int orig_x, int orig_y, struct m_vect * m_vects, int len)
 {
-    struct move * moves = malloc(len * sizeof(struct m_vect));
+    //struct pos * moves = malloc(len * sizeof(struct m_vect));
+    struct al * list = al_new(sizeof(struct m_vect));
 
     int i, valid = 0;
     for (i = 0; i < len; i++) {
         int x = orig_x + m_vects[i].dx;
         int y = orig_y + m_vects[i].dy;
         if (prospect_move(x, y)) {
-            moves[valid].piece = board[orig_x][orig_y];
+            //moves[valid].piece = board[orig_x][orig_y];
             moves[valid].x = x;
             moves[valid].y = y;
             valid += 1;
@@ -137,6 +97,34 @@ m_moves(struct move ** moves__out, int orig_x, int orig_y, struct m_vect * m_vec
 
     *moves__out = moves;
     return valid;
+}
+
+/**
+ * Finds correct piece to move given a destination.
+ * Return: whether move is unambiguous
+ * Args: <out> origin__out: the piece that is to be moved
+ *       <in>     san_move: the destination
+ */
+bool
+find_origin(struct pos * origin__out, struct san_move san_move)
+{
+    int idx = 0;
+    struct pos pos[64];
+
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            if (board[x][y] == san_move.piece) {
+                pos[idx].x = x;
+                pos[idx].y = y;
+                idx += 1;
+            }
+        }
+    }
+
+    int count = idx;
+    for (int i = 0; i < idx; i++) {
+
+    }
 }
 
 void
@@ -150,19 +138,25 @@ test()
 {
     printf("board:\n");
     print_board();
-    struct move * moves;
+    struct pos * moves;
     int l = m_moves(&moves, 4, 7, k_mvects, sizeof(k_mvects)/sizeof(k_mvects[0]));
-    print_moves(moves, l);
+    print_moves(board[4][7], moves, l);
     free(moves);
 
     printf("algebraic notation:\n");
-    struct move san_test_moves[2];
+    struct san_move san_test_moves[2];
     san_test_moves[0] = san_to_move("Nf3");
     san_test_moves[1] = san_to_move("c5");
     printf("\tNf3 -> ");
-    print_moves(san_test_moves, 1);
+    print_moves(san_test_moves[0].piece, &(san_test_moves[0].move), 1);
     printf("\tc5 -> ");
-    print_moves(san_test_moves+1, 1);
+    print_moves(san_test_moves[1].piece, &(san_test_moves[1].move), 1);
+
+    struct pos origin;
+    find_origin(&origin, san_test_moves[0]);
+    print_moves(board[origin.x][origin.y], &origin, 1);
+    find_origin(&origin, san_test_moves[1]);
+    print_moves(board[origin.x][origin.y], &origin, 1);
 
     return 0;
 }
