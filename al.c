@@ -3,9 +3,13 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include "al.h"
 
+/**
+ * Make new array list where each element is sz bytes in size.
+ */
 struct al *
 al_new(size_t sz)
 {
@@ -26,6 +30,9 @@ al_free(struct al * al)
     free(al);
 }
 
+/**
+ * Copies bytes from elem into next position in array list.
+ */
 void
 al_add(struct al * al, void * elem)
 {
@@ -42,4 +49,20 @@ al_add(struct al * al, void * elem)
     }
 
     memcpy(al->data + (al->n * al->sz), elem, al->sz);
+    al->n += 1;
+}
+
+void *
+al_get(struct al * al, int index)
+{
+    if (index >= al->n) {
+        fprintf(stderr, "[!!] array list: index > length\n");
+        return NULL;
+    }
+    if (index < 0) {
+        fprintf(stderr, "[!!] array list: index < 0\n");
+        return NULL;
+    }
+
+    return al->data + (index * al->sz);
 }

@@ -62,41 +62,54 @@ print_moves(int piece, struct pos * moves, int len)
     printf("\n");
 }
 
+/**
+ * moves: arraylist of struct pos
+ */
+void print_moves_al(int piece, struct al * moves)
+{
+    struct pos * move;
+    for (int i = 0; i < moves->n; i++) {
+        move = (struct pos *) al_get(moves, i);
+        printf("%c(%d, %d), ", piece, move->x, move->y);
+    }
+    printf("\n");
+}
+
 
 int
-prospect_move(int x, int y)
+prospect_move(struct pos move)
 {
     // TODO: return delta in score after this move (ie if move captures)
-    return x >= 0 && x < 8 && y >= 0 && y < 8 && board[x][y] == EE;
+    return move.x >= 0 && move.x < 8 && move.y >= 0 && move.y < 8 && board[move.x][move.y] == EE;
 }
 
 /**
  * Finds all legal moves
- * Return: number of moves
- * Args: <out> moves__out: the legal moves
- *       <in>     m_vects: m_vect movement type vectors
- *       <in>         len: number of elements in m_vects
+ * Return: moves as arraylist of struct pos
+ * Args: <in> m_vects: m_vect movement type vectors
+ *       <in>     len: number of elements in m_vects
  */
-int
-m_moves(struct pos ** moves__out, int orig_x, int orig_y, struct m_vect * m_vects, int len)
+struct al *
+m_moves(int orig_x, int orig_y, struct m_vect * m_vects, int len)
 {
     //struct pos * moves = malloc(len * sizeof(struct m_vect));
-    struct al * list = al_new(sizeof(struct m_vect));
+    struct pos move;
+    struct al * list = al_new(sizeof(struct pos));
 
-    int i, valid = 0;
-    for (i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
         int x = orig_x + m_vects[i].dx;
         int y = orig_y + m_vects[i].dy;
-        if (prospect_move(x, y)) {
+        move.x = x;
+        move.y = y;
+        if (prospect_move(move)) {
             //moves[valid].piece = board[orig_x][orig_y];
-            moves[valid].x = x;
-            moves[valid].y = y;
-            valid += 1;
+            //moves[valid].x = x;
+            //moves[valid].y = y;
+            al_add(list, &move);
         }
     }
 
-    *moves__out = moves;
-    return valid;
+    return list;
 }
 
 /**
@@ -121,9 +134,9 @@ find_origin(struct pos * origin__out, struct san_move san_move)
         }
     }
 
-    int count = idx;
+    struct al * moves = al_new(sizeof(struct pos));
     for (int i = 0; i < idx; i++) {
-
+        //m_moves(pos.x, pos.y, vects[san_move.piece]
     }
 }
 
@@ -138,10 +151,11 @@ test()
 {
     printf("board:\n");
     print_board();
-    struct pos * moves;
-    int l = m_moves(&moves, 4, 7, k_mvects, sizeof(k_mvects)/sizeof(k_mvects[0]));
-    print_moves(board[4][7], moves, l);
-    free(moves);
+
+    printf("finding moves for e2 pawn:\n\t");
+    struct al * moves = m_moves(4, 6, wp_mvects, sizeof(wp_mvects)/sizeof(wp_mvects[0]));
+    print_moves_al(board[4][6], moves);
+    al_free(moves);
 
     printf("algebraic notation:\n");
     struct san_move san_test_moves[2];
@@ -166,6 +180,7 @@ test()
 int
 main(int argc, char ** argv)
 {
+    init_vects();
     #if TEST == 1
     test();
     return 0;

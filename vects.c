@@ -22,7 +22,7 @@ r_dvects[] = {
 };
 
 struct d_vect
-b_vects[] = {
+b_dvects[] = {
     { .dx = -1, .dy = -1 },
     { .dx =  1, .dy =  1 },
     { .dx = -1, .dy =  1 },
@@ -66,3 +66,21 @@ k_mvects[] = {
     { .dx =  0, .dy =  1 },
     { .dx =  1, .dy =  1 }
 };
+
+void * vects[128];
+
+void init_vects()
+{
+    vects['p'] = bp_mvects;
+    vects['P'] = wp_mvects;
+    vects['k'] = k_mvects;
+    vects['K'] = k_mvects;
+    vects['q'] = q_dvects;
+    vects['Q'] = q_dvects;
+    vects['r'] = r_dvects;
+    vects['R'] = r_dvects;
+    vects['b'] = b_dvects;
+    vects['B'] = b_dvects;
+    vects['n'] = n_mvects;
+    vects['N'] = n_mvects;
+}

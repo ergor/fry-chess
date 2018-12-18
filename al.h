@@ -16,5 +16,6 @@ struct al {
 struct al * al_new(size_t sz);
 void al_free(struct al * al);
 void al_add(struct al * al, void * elem);
+void * al_get(struct al * al, int index);
 
 #endif

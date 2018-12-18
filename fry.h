@@ -48,5 +48,7 @@ extern struct m_vect wp_mvects[3];
 extern struct m_vect bp_mvects[3];
 extern struct m_vect n_mvects[8];
 extern struct m_vect k_mvects[8];
+extern void * vects[128];
+extern void init_vects();
 
 #endif
