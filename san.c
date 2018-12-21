@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <regex.h>
 #include <sys/types.h>
 
@@ -8,12 +9,14 @@
 #include "san.h"
 
 struct san_move
-san_to_move(char * san)
+san_to_move(char * san, int move_num)
 {
     char msgbuf[1024];
 
+    bool black_turn = move_num & 1;
+
     char piece = 'X';
-    struct pos move = { .x = -1, .y = -1 };
+    struct vect move = { .x = -1, .y = -1 };
     
     regex_t regex;
     size_t nmatch = 3; /* 0: the whole match, 1: capture group 1, 2: capture group 2 */
@@ -46,6 +49,9 @@ san_to_move(char * san)
         fprintf(stderr, "regex match failed: %s\n", msgbuf);
         //exit(reti);
     }
+
+    if (black_turn)
+        piece += 0x20; // lower case for black pieces
 
     regfree(&regex);
     struct san_move san_move = { .piece = piece, .move = move };

@@ -5,10 +5,10 @@
 #include "fry.h"
 
 struct san_move {
-    int piece;
-    struct pos move;
+    char piece;
+    struct vect move;
 };
 
-struct san_move san_to_move(char * san);
+struct san_move san_to_move(char * san, int move_num);
 
 #endif

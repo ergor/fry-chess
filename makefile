@@ -5,7 +5,7 @@ CFLAGS=-g -Wall -I.
 DEPS=fry.h san.h
 
 ODIR=obj
-_OBJ=fry.o san.o vects.o al.o
+_OBJ=fry.o san.o pieces.o al.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
@@ -14,3 +14,7 @@ $(ODIR)/%.o: %.c $(DEPS)
 
 fry: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
+
+.PHONY: clean
+clean:
+	rm -f $(ODIR)/*.o

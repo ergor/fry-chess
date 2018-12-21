@@ -55,7 +55,7 @@ print_board()
 }
 
 void
-print_moves(int piece, struct pos * moves, int len)
+print_moves(int piece, struct vect * moves, int len)
 {
     for (int i = 0; i < len; i++)
         printf("%c(%d, %d), ", piece, moves[i].x, moves[i].y);
@@ -65,11 +65,11 @@ print_moves(int piece, struct pos * moves, int len)
 /**
  * moves: arraylist of struct pos
  */
-void print_moves_al(int piece, struct al * moves)
+void print_moves_al(char piece, struct al * moves)
 {
-    struct pos * move;
+    struct vect * move;
     for (int i = 0; i < moves->n; i++) {
-        move = (struct pos *) al_get(moves, i);
+        move = (struct vect *) al_get(moves, i);
         printf("%c(%d, %d), ", piece, move->x, move->y);
     }
     printf("\n");
@@ -77,10 +77,30 @@ void print_moves_al(int piece, struct al * moves)
 
 
 int
-prospect_move(struct pos move)
+prospect_move(struct vect move)
 {
     // TODO: return delta in score after this move (ie if move captures)
     return move.x >= 0 && move.x < 8 && move.y >= 0 && move.y < 8 && board[move.x][move.y] == EE;
+}
+
+void
+absolute_moves(struct vect * origin, struct al * moves, struct piece * piece)
+{
+    struct vect move;
+
+    for (int i = 0; i < piece->mvt_len; i++) {
+        move.x = origin->x + piece->mvt[i].x;
+        move.y = origin->y + piece->mvt[i].y;
+        if (prospect_move(move)) {
+            al_add(moves, &move);
+        }
+    }
+}
+
+void
+iterative_moves(struct al * moves, struct piece * piece)
+{
+
 }
 
 /**
@@ -90,54 +110,64 @@ prospect_move(struct pos move)
  *       <in>     len: number of elements in m_vects
  */
 struct al *
-m_moves(int orig_x, int orig_y, struct m_vect * m_vects, int len)
+find_moves(struct vect origin)
 {
-    //struct pos * moves = malloc(len * sizeof(struct m_vect));
-    struct pos move;
-    struct al * list = al_new(sizeof(struct pos));
+    struct al * moves = al_new(sizeof(struct vect));
 
-    for (int i = 0; i < len; i++) {
-        int x = orig_x + m_vects[i].dx;
-        int y = orig_y + m_vects[i].dy;
-        move.x = x;
-        move.y = y;
-        if (prospect_move(move)) {
-            //moves[valid].piece = board[orig_x][orig_y];
-            //moves[valid].x = x;
-            //moves[valid].y = y;
-            al_add(list, &move);
-        }
-    }
+    struct piece * piece = &(pieces[board[origin.x][origin.y]]);
+    if (piece->iter)
+        iterative_moves(moves, piece);
+    else
+        absolute_moves(&origin, moves, piece);
+    
+    return moves;
+}
 
-    return list;
+void
+move(struct vect origin, struct vect dest)
+{
+    board[dest.x][dest.y] = board[origin.x][origin.y];
+    board[origin.x][origin.y] = EE;
 }
 
 /**
- * Finds correct piece to move given a destination.
- * Return: whether move is unambiguous
- * Args: <out> origin__out: the piece that is to be moved
- *       <in>     san_move: the destination
+ * Finds the pieces that can move to given destination.
+ * Return: array list of elligible piece positions
+ * Args: <in> san_move: the destination
  */
-bool
-find_origin(struct pos * origin__out, struct san_move san_move)
+struct al *
+find_origin(struct san_move san_move)
 {
     int idx = 0;
-    struct pos pos[64];
+    struct vect canditates[64];
 
     for (int y = 0; y < 8; y++) {
         for (int x = 0; x < 8; x++) {
             if (board[x][y] == san_move.piece) {
-                pos[idx].x = x;
-                pos[idx].y = y;
+                canditates[idx].x = x;
+                canditates[idx].y = y;
                 idx += 1;
             }
         }
     }
 
-    struct al * moves = al_new(sizeof(struct pos));
+    struct al * origins = al_new(sizeof(struct vect));
+    struct vect dest = san_move.move;
+
+    struct al * moves; //= al_new(sizeof(struct vect));
     for (int i = 0; i < idx; i++) {
         //m_moves(pos.x, pos.y, vects[san_move.piece]
+        moves = find_moves(canditates[i]);
+        for (int j = 0; j < moves->n; j++) {
+            struct vect * move = (struct vect *) al_get(moves, j);
+            if (move->x == dest.x && move->y == dest.y) {
+                al_add(origins, &(canditates[i]));
+            }
+        }
+        al_free(moves);
     }
+
+    return origins;
 }
 
 void
@@ -153,38 +183,80 @@ test()
     print_board();
 
     printf("finding moves for e2 pawn:\n\t");
-    struct al * moves = m_moves(4, 6, wp_mvects, sizeof(wp_mvects)/sizeof(wp_mvects[0]));
+    struct vect origin = { .x = 4, .y = 6 };
+    //struct al * moves = m_moves(4, 6, wp_mvects, sizeof(wp_mvects)/sizeof(wp_mvects[0]));
+    struct al * moves = find_moves(origin);
     print_moves_al(board[4][6], moves);
     al_free(moves);
 
     printf("algebraic notation:\n");
     struct san_move san_test_moves[2];
-    san_test_moves[0] = san_to_move("Nf3");
-    san_test_moves[1] = san_to_move("c5");
+    san_test_moves[0] = san_to_move("Nf3", 0);
+    san_test_moves[1] = san_to_move("c5", 1);
     printf("\tNf3 -> ");
     print_moves(san_test_moves[0].piece, &(san_test_moves[0].move), 1);
     printf("\tc5 -> ");
     print_moves(san_test_moves[1].piece, &(san_test_moves[1].move), 1);
 
-    struct pos origin;
-    find_origin(&origin, san_test_moves[0]);
-    print_moves(board[origin.x][origin.y], &origin, 1);
-    find_origin(&origin, san_test_moves[1]);
-    print_moves(board[origin.x][origin.y], &origin, 1);
+
+    printf("finding the pieces to move:\n");
+    struct al * origins = find_origin(san_test_moves[0]);
+    printf("\tNf3 -> from ");
+    print_moves_al(san_test_moves[0].piece, origins);
+    al_free(origins);
+    origins = find_origin(san_test_moves[1]);
+    printf("\tc5 -> from ");
+    print_moves_al(san_test_moves[1].piece, origins);
+    al_free(origins);
 
     return 0;
 }
 
+int
+interactive()
+{
+    struct al * origins;
+    char readbuf[256];
+    for (int i = 0; ; i++) {
+        //char *fgets(char *s, int size, FILE *stream);
+        //char *strtok(char *str, const char *delim);
+        printf("%d:%c> ", i>>1, i & 1 ? 'b' : 'w');
+        if (fgets(readbuf, 3, stdin) == NULL) {
+            printf("fgets() returned NULL\n");
+            break;
+        }
+        struct san_move san_move = san_to_move(readbuf, i);
+        origins = find_origin(san_move);
+
+        if (origins->n != 1) {
+            printf("%s\n", origins->n == 0 ? "illegal move" : "ambiguous move");
+            i--;
+            goto flushbuf;
+        }
+
+        struct vect * origin = (struct vect *) al_get(origins, 0);
+        move(*origin, san_move.move);
+        print_board();
+        al_free(origins);
+    flushbuf:
+        for(int i = 0; i < 10 && getchar() != '\n'; i++);
+    }
+    return 0;
+}
+
 #define TEST 1
+#define INTERACTIVE 1
 
 int
 main(int argc, char ** argv)
 {
-    init_vects();
+    init_pieces();
     #if TEST == 1
     test();
-    return 0;
     #endif
 
+    #if INTERACTIVE == 1
+    interactive();
+    #endif
     return 0;
 }

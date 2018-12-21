@@ -2,6 +2,8 @@
 #ifndef FRY_H
 #define FRY_H
 
+#include <stdbool.h>
+
 #define INVERT      "\033[7m"
 #define RST_INVERT  "\033[27m"
 
@@ -21,34 +23,22 @@
 #define BN      'n'     /* black knight */
 #define BB      'b'     /* black bishop */
 
-
-struct m_vect {
-    int dx;
-    int dy;
-};
-
-struct d_vect {
-    int dx;
-    int dy;
-};
-
-struct piece {
-    int val;
-};
-
-struct pos {
+struct vect {
     int x;
     int y;
 };
 
-extern struct d_vect q_dvects[8];
-extern struct d_vect r_dvects[4];
-extern struct d_vect b_vects[4];
-extern struct m_vect wp_mvects[3];
-extern struct m_vect bp_mvects[3];
-extern struct m_vect n_mvects[8];
-extern struct m_vect k_mvects[8];
-extern void * vects[128];
-extern void init_vects();
+struct piece {
+    int val;                /* centipawn value of piece */
+    char sym;               /* ASCII representation of the piece */
+    bool iter;              /* whether the vector should be iterated */
+    int mvt_len;            /* movement vecetor length */
+    int att_len;            /* attack vector length */
+    struct vect * mvt;      /* movement vector */
+    struct vect * att;      /* attack vector (NULL if same as mvmt) */
+};
+
+extern struct piece pieces[128];
+void init_pieces();
 
 #endif
