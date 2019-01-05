@@ -23,9 +23,17 @@
 #define BN      'n'     /* black knight */
 #define BB      'b'     /* black bishop */
 
+#define WP_START_RANK   6
+#define BP_START_RANK   1
+
 struct vect {
     int x;
     int y;
+};
+
+struct move {
+    struct vect dest;   /* where this move lands */
+    int delta;          /* board value change if this move is performed */
 };
 
 struct piece {
@@ -33,9 +41,7 @@ struct piece {
     char sym;               /* ASCII representation of the piece */
     bool iter;              /* whether the vector should be iterated */
     int mvt_len;            /* movement vecetor length */
-    int att_len;            /* attack vector length */
     struct vect * mvt;      /* movement vector */
-    struct vect * att;      /* attack vector (NULL if same as mvmt) */
 };
 
 extern struct piece pieces[128];

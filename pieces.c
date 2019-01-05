@@ -22,8 +22,7 @@ struct piece queen = {
     .val = 900,
     .iter = true,
     .mvt_len = 8,
-    .mvt = queen_mvt,
-    .att = NULL
+    .mvt = queen_mvt
 };
 
 
@@ -41,8 +40,7 @@ struct piece rook = {
     .val = 500,
     .iter = true,
     .mvt_len = 4,
-    .mvt = rook_mvt,
-    .att = NULL
+    .mvt = rook_mvt
 };
 
 
@@ -60,52 +58,18 @@ struct piece bishop = {
     .val = 300,
     .iter = true,
     .mvt_len = 4,
-    .mvt = bishop_mvt,
-    .att = NULL
+    .mvt = bishop_mvt
 };
 
 
 //------------------------------------------------------------------------------
-// WHITE PAWN
+// PAWN
 
-struct vect white_pawn_mvt[] = {
-    { .x =  0, .y = -1 }
-};
-
-struct vect white_pawn_att[] = {
-    { .x = -1, .y = -1 },
-    { .x =  1, .y = -1 }
-};
-
-struct piece white_pawn = {
+struct piece pawn = {
     .val = 100,
     .iter = false,
-    .mvt_len = 1,
-    .att_len = 2,
-    .mvt = white_pawn_mvt,
-    .att = white_pawn_att
-};
-
-
-//------------------------------------------------------------------------------
-// BLACK PAWN
-
-struct vect black_pawn_mvt[] = {
-    { .x =  0, .y =  1 }
-};
-
-struct vect black_pawn_att[] = {
-    { .x = -1, .y =  1 },
-    { .x =  1, .y =  1 }
-};
-
-struct piece black_pawn = {
-    .val = 100,
-    .iter = false,
-    .mvt_len = 1,
-    .att_len = 2,
-    .mvt = black_pawn_mvt,
-    .att = black_pawn_att
+    .mvt_len = 0,
+    .mvt = NULL     /* the pawn is a special case */
 };
 
 
@@ -127,8 +91,7 @@ struct piece knight = {
     .val = 300,
     .iter = false,
     .mvt_len = 8,
-    .mvt = knight_mvt,
-    .att = NULL
+    .mvt = knight_mvt
 };
 
 
@@ -150,8 +113,7 @@ struct piece king = {
     .val = 100000,
     .iter = false,
     .mvt_len = 8,
-    .mvt = king_mvt,
-    .att = NULL
+    .mvt = king_mvt
 };
 
 
@@ -161,31 +123,48 @@ void init_pieces()
 {
     pieces[WK] = king;          /* white king */
     pieces[WK].sym = WK;
+
     pieces[BK] = king;          /* black king */
     pieces[BK].sym = BK;
+    pieces[BK].val = -king.val;
+
 
     pieces[WQ] = queen;         /* white queen */
     pieces[WQ].sym = WQ;
+
     pieces[BQ] = queen;         /* black queen */
     pieces[BQ].sym = BQ;
+    pieces[BQ].val = -queen.val;
+
 
     pieces[WR] = rook;          /* white rook */
     pieces[WR].sym = WR;
+
     pieces[BR] = rook;          /* black rook */
     pieces[BR].sym = BR;
+    pieces[BR].val = -rook.val;
+
 
     pieces[WN] = knight;        /* white knight */
     pieces[WN].sym = WN;
+
     pieces[BN] = knight;        /* black knight */
     pieces[BN].sym = BN;
+    pieces[BN].sym = -knight.val;
+
 
     pieces[WB] = bishop;        /* white bishop */
     pieces[WB].sym = WB;
+
     pieces[BB] = bishop;        /* black bishop */
     pieces[BB].sym = BB;
+    pieces[BB].val = -bishop.val;
 
-    pieces[WP] = white_pawn;    /* white pawn */
+
+    pieces[WP] = pawn;          /* white pawn */
     pieces[WP].sym = WP;
-    pieces[BP] = black_pawn;    /* black pawn */
+
+    pieces[BP] = pawn;          /* black pawn */
     pieces[BP].sym = BP;
+    pieces[BP].val = -pawn.val;
 }

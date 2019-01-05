@@ -8,6 +8,10 @@
 #include "fry.h"
 #include "san.h"
 
+/**
+ * Args:
+ *  move_num: current move number of this game
+ */
 struct san_move
 san_to_move(char * san, int move_num)
 {
@@ -16,7 +20,7 @@ san_to_move(char * san, int move_num)
     bool black_turn = move_num & 1;
 
     char piece = 'X';
-    struct vect move = { .x = -1, .y = -1 };
+    struct vect dest = { .x = -1, .y = -1 };
     
     regex_t regex;
     size_t nmatch = 3; /* 0: the whole match, 1: capture group 1, 2: capture group 2 */
@@ -38,8 +42,8 @@ san_to_move(char * san, int move_num)
         if (r_piece.rm_eo >= 0 || r_piece.rm_so >= 0)
             piece = san[r_piece.rm_so];
 
-        move.x = san[r_move.rm_so] - 'a';
-        move.y = 7 - (san[r_move.rm_eo - 1] - '1');
+        dest.x = san[r_move.rm_so] - 'a';
+        dest.y = 7 - (san[r_move.rm_eo - 1] - '1');
     }
     else if (reti == REG_NOMATCH) {
         fprintf(stderr, "no match found\n");
@@ -54,7 +58,7 @@ san_to_move(char * san, int move_num)
         piece += 0x20; // lower case for black pieces
 
     regfree(&regex);
-    struct san_move san_move = { .piece = piece, .move = move };
+    struct san_move san_move = { .piece = piece, .dest = dest };
 
     return san_move;
 }
