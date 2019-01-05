@@ -26,6 +26,8 @@
 #define WP_START_RANK   6
 #define BP_START_RANK   1
 
+#define MAX_SEARCH_DEPTH    64
+
 struct vect {
     int x;
     int y;

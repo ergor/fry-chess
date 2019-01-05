@@ -231,6 +231,37 @@ find_origin(struct san_move san_move)
     return origins;
 }
 
+/**
+ * Args:
+ *      n: current search depth
+ *  depth: maximum search depth
+ *     nn: keeps track of the deepest node reached thus far
+ */
+int
+_eval_tree(int n, int depth, int nn)
+{
+    static int boards[MAX_SEARCH_DEPTH][8][8];
+    // before descending, store board state. ie
+    // for each depth, previous board state is stored. (log(n) space for n nodes)
+    
+    if (n < depth) {
+        // recursion
+    }
+    else {
+        // return
+    }
+}
+
+int
+eval_tree(int depth)
+{
+    if (depth > MAX_SEARCH_DEPTH) {
+        printf("warning: requested depth (%d) exceeds max (%d). scaling back...\n", depth, MAX_SEARCH_DEPTH);
+        depth = MAX_SEARCH_DEPTH;
+    }
+    return _eval_tree(0, depth, -1);
+}
+
 void
 game_loop(bool i_am_white)
 {
