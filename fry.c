@@ -235,17 +235,34 @@ find_origin(struct san_move san_move)
  * Args:
  *      n: current search depth
  *  depth: maximum search depth
- *     nn: keeps track of the deepest node reached thus far
  */
 int
-_eval_tree(int n, int depth, int nn)
+_eval_tree(int n, int depth, struct move move, bool maximize)
 {
-    static int boards[MAX_SEARCH_DEPTH][8][8];
     // before descending, store board state. ie
     // for each depth, previous board state is stored. (log(n) space for n nodes)
+    static int boards[MAX_SEARCH_DEPTH][8][8];
+    if (n == 0)
+        memcpy(&(boards[n]), board, 64 * sizeof(int));
+    else
+        memcpy(&(boards[n]), &(boards[n-1]), 64 * sizeof(int));
     
+    // boards[n] is the location to store the board mutation currently under evaluation
+    // (at this point, boards[n] will be a fresh copy of the parent node, and we apply our move to it)
+    /* apply move */
+
+    // then:
+    /*
+     * 1. generate all next moves at this depth after that move (ie. gen from boards[n])
+     * 2. for each move:
+     *      1. _eval_tree(boards[n])
+     */
+
     if (n < depth) {
         // recursion
+        /* generate moves */
+        /* for move in moves: */
+        /* return _eval_tree(n+1, depth, move, min/max) */
     }
     else {
         // return
@@ -259,7 +276,15 @@ eval_tree(int depth)
         printf("warning: requested depth (%d) exceeds max (%d). scaling back...\n", depth, MAX_SEARCH_DEPTH);
         depth = MAX_SEARCH_DEPTH;
     }
-    return _eval_tree(0, depth, -1);
+
+    //struct move {
+    //struct vect dest;   /* where this move lands */
+    //int delta;          /* board value change if this move is performed */
+    //};
+
+    // TODO: base stand_still on the first piece to move (as to not have special case for -1, -1)
+    struct move stand_still = { .dest = { .x = -1, .y = -1}, .delta = 0 };
+    return _eval_tree(0, depth, stand_still, true);
 }
 
 void
