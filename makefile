@@ -2,7 +2,7 @@
 CC=gcc
 CFLAGS=-g -Wall -I.
 
-DEPS=fry.h san.h
+DEPS=fry.h san.h al.h
 
 ODIR=obj
 _OBJ=fry.o san.o pieces.o al.o

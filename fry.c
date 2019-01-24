@@ -87,7 +87,7 @@ prospect_move(struct move * move)
         return false;
 
     int landing_sq = board[dest->x][dest->y];
-    
+
     if (landing_sq != EE) {
         move->delta = -pieces[landing_sq].val;
     }
@@ -181,15 +181,15 @@ find_moves(struct vect origin)
         iterative_moves(moves, piece);
     else
         absolute_moves(&origin, moves, piece);
-    
+
     return moves;
 }
 
 void
-move(struct vect origin, struct vect dest)
+move(int board[8][8], struct vect * origin, struct vect * dest)
 {
-    board[dest.x][dest.y] = board[origin.x][origin.y];
-    board[origin.x][origin.y] = EE;
+    board[dest->x][dest->y] = board[origin->x][origin->y];
+    board[origin->x][origin->y] = EE;
 }
 
 /**
@@ -231,13 +231,33 @@ find_origin(struct san_move san_move)
     return origins;
 }
 
+vect_list_t *
+find_origins(bool white)
+{
+    vect_list_t * origins = NEW_VECT_LIST();
+    char * syms = white ? "PQKRNB" : "pqkrnb";
+
+    struct vect tmp;
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            if (strchr(syms, board[x][y]) != NULL) {
+                tmp.x = x;
+                tmp.y = y;
+                al_add(origins, &tmp);
+            }
+        }
+    }
+
+    return origins;
+}
+
 /**
  * Args:
  *      n: current search depth
  *  depth: maximum search depth
  */
 int
-_eval_tree(int n, int depth, struct move move, bool maximize)
+_eval_tree(int n, int depth, struct vect origin, struct move move, bool maximize)
 {
     // before descending, store board state. ie
     // for each depth, previous board state is stored. (log(n) space for n nodes)
@@ -246,7 +266,7 @@ _eval_tree(int n, int depth, struct move move, bool maximize)
         memcpy(&(boards[n]), board, 64 * sizeof(int));
     else
         memcpy(&(boards[n]), &(boards[n-1]), 64 * sizeof(int));
-    
+
     // boards[n] is the location to store the board mutation currently under evaluation
     // (at this point, boards[n] will be a fresh copy of the parent node, and we apply our move to it)
     /* apply move */
@@ -269,8 +289,8 @@ _eval_tree(int n, int depth, struct move move, bool maximize)
     }
 }
 
-int
-eval_tree(int depth)
+struct move *
+eval_tree(int depth, bool is_white)
 {
     if (depth > MAX_SEARCH_DEPTH) {
         printf("warning: requested depth (%d) exceeds max (%d). scaling back...\n", depth, MAX_SEARCH_DEPTH);
@@ -282,15 +302,48 @@ eval_tree(int depth)
     //int delta;          /* board value change if this move is performed */
     //};
 
+    /*
+     * 1. generate all possible moves from this position (ie the begining of my turn)
+     * 2. for each possible move:
+     *      1. _eval_tree(move)
+     *      2. store result
+     * 3. return best move
+     * */
+
     // TODO: base stand_still on the first piece to move (as to not have special case for -1, -1)
-    struct move stand_still = { .dest = { .x = -1, .y = -1}, .delta = 0 };
-    return _eval_tree(0, depth, stand_still, true);
+    vect_list_t * al_origins = find_origins(is_white);
+    struct vect * origins = GET_VECTS(al_origins);
+
+    struct al * moves_list_list = NEW_LIST_LIST();
+    for (int i = 0; i < al_origins->n; i++) {
+        move_list_t * al_moves = find_moves(origins[i]);
+        al_add(moves_list_list, &al_moves); // list of list must contain pointers so that they can be individually freed afterwards
+
+        struct move * moves = GET_MOVES(al_moves);
+        for (int j = 0; j < al_moves->n; j++) {
+            _eval_tree(1, depth, origins[i], moves[j], false);
+        }
+    }
+    //int val = _eval_tree(0, depth, stand_still, false); // i am maximizing, thus next move down will be minimizing
+    al_free_lstlst(moves_list_list);
+    al_free(al_origins);
+    return NULL;
 }
 
 void
 game_loop(bool i_am_white)
 {
+    for(int i = 0; ; i++) {
+        bool is_black_turn = i & 1;
+        if (i_am_white) {
+            if (is_black_turn) {
 
+            }
+            else {
+                eval_tree(10, true);
+            }
+        }
+    }
 }
 
 int
@@ -353,7 +406,7 @@ interactive()
         }
 
         struct vect * origin = (struct vect *) al_get(origins, 0);
-        move(*origin, san_move.dest);
+        move(board, origin, &(san_move.dest));
         print_board();
         al_free(origins);
     //flushbuf:
@@ -363,7 +416,7 @@ interactive()
 }
 
 #define TEST 1
-#define INTERACTIVE 1
+#define INTERACTIVE 0
 
 int
 main(int argc, char ** argv)
@@ -376,5 +429,6 @@ main(int argc, char ** argv)
     #if INTERACTIVE == 1
     interactive();
     #endif
+    game_loop(true);
     return 0;
 }

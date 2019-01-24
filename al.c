@@ -16,9 +16,9 @@ al_new(size_t sz)
     struct al * al = malloc(sizeof(struct al));
 
     al->max = AL_INIT_LEN;
-    al->data = malloc(al->max * sz);
     al->sz = sz;
     al->n = 0;
+    al->data = malloc(LEN(al, al->max));//al->max * sz);
 
     return al;
 }
@@ -30,11 +30,23 @@ al_free(struct al * al)
     free(al);
 }
 
+void
+al_free_lstlst(struct al * als)
+{
+    //struct al * als_array = GET_LISTS(als);
+    for (int i = 0; i < als->n; i++) {
+        al_free(al_get(als, i));
+    }
+}
+
 /**
- * Copies bytes from elem into next position in array list.
+ * Copies bytes from element into next position in array list.
+ * Args:
+ *         al: the array list to add the element to
+ *  elem_addr: the address of the element to add
  */
 void
-al_add(struct al * al, void * elem)
+al_add(struct al * al, void * elem_addr)
 {
     if (al->n == al->max) {
         void * old = al->data;
@@ -43,12 +55,12 @@ al_add(struct al * al, void * elem)
         al->max *= 2;
         al->data = malloc(al->max * al->sz);
 
-        memcpy(al->data, old, old_len);
+        memcpy(al->data, old, LEN(al, old_len));
         
         free(old);
     }
 
-    memcpy(al->data + (al->n * al->sz), elem, al->sz);
+    memcpy(al->data + LEN(al, al->n), elem_addr, al->sz);
     al->n += 1;
 }
 
@@ -64,5 +76,5 @@ al_get(struct al * al, int index)
         return NULL;
     }
 
-    return al->data + (index * al->sz);
+    return al->data + LEN(al, index);
 }
