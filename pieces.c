@@ -90,7 +90,7 @@ struct piece_def black_bishop = {
 //------------------------------------------------------------------------------
 // PAWN
 
-#define P_MVT_LEN   0
+#define P_MVT_LEN   4
 
 struct piece_def white_pawn = {
     .val = VAL_WP,

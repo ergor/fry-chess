@@ -68,10 +68,15 @@ struct piece {
 };
 
 struct board {
-    int len;
-    int white_checks;   /* number of checks against white king */
-    int black_checks;   /* number of checks against black king */
-    struct piece * pieces;
+    int len;                /* number of pieces on the board */
+    int white_checks;       /* number of checks against white king */
+    int black_checks;       /* number of checks against black king */
+    struct piece * pieces;  /* the pieces on the board (consecutive) */
+};
+
+struct board_list {
+    int len;                /* number of boards */
+    struct board * boards;  /* the boards (consecutive) */
 };
 
 extern struct piece starting_pieces[32];

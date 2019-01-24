@@ -142,46 +142,6 @@ void print_moves_al(char piece, vect_list_t * moves)
 // 
 // }
 
-/**
- * Args:
- *  <out> moves: the moves are added to this arraylist
- */
-void
-pawn_moves(struct vect * origin, move_list_t * moves, bool is_white)
-{
-    bool in_start_pos;
-    in_start_pos = is_white ? origin->y == WP_START_RANK : origin->y == BP_START_RANK;
-
-    struct move move;
-    int delta_y = (is_white ? -1 : 1);
-
-    // initialize move + do regular move
-    move.dest.x = origin->x;
-    move.dest.y = origin->y + delta_y;
-    if (prospect_move(&move)) {
-        // TODO: check for promotion before adding move to arraylist
-        al_add(moves, &move);
-    }
-
-    // can move 1 more square if in start position
-    if (in_start_pos) {
-        move.dest.y += delta_y;
-        if (prospect_move(&move))
-            al_add(moves, &move);
-    }
-
-    // attack moves
-    move.dest.y = origin->y + delta_y;
-
-    move.dest.x = origin->x - 1; // left
-    if (prospect_move(&move) && move.delta != 0)
-        al_add(moves, &move);
-
-    move.dest.x = origin->x + 1; // right
-    if (prospect_move(&move) && move.delta != 0)
-        al_add(moves, &move);
-}
-
 // /**
 //  * Finds all legal moves
 //  * Return: moves as arraylist of struct move
@@ -222,6 +182,73 @@ evaluate(struct board board)
     return sum;
 }
 
+__always_inline bool
+is_within_bounds(struct vect landing_sq)
+{
+    return landing_sq.x >= 0 && landing_sq.x < 8 && landing_sq.y >= 0 && landing_sq.y < 8;
+}
+
+struct board
+apply_move(struct board * basis, struct piece * piece, 
+           struct vect landing_sq, bool is_white_turn)
+{
+    /** 
+     * search for correct piece:
+     * - the pieces in the list maintain sorted-by-position order (0,0=>0; 7;7=>63)
+     * - do tree search, ie:
+     *  - split search area and get value of element in the intersection
+     *  - if needle < element: tree search lower half
+     *  - if needle > element: tree search upper half
+     *  - if needle == element: replace this piece if enemy else illegal
+     *  - if none of the above: update piece and swap positions
+     */
+}
+
+struct board_list
+generate_pawn(struct board * basis, struct piece * piece, bool is_white_turn)
+{
+    struct piece pawn = *piece;
+
+    struct board_list boards = {
+        .len = 0,
+        .boards = malloc(pawn.def->mvt_len * sizeof(struct board))
+    };
+
+    bool in_start_pos = is_white_turn ? pawn.y == WP_START_RANK 
+                                      : pawn.y == BP_START_RANK;
+
+    struct vect landing_sq;
+    int delta_y = is_white_turn ? -1 : 1;
+
+    // initialize move + do regular move
+    landing_sq.x = pawn.x;
+    landing_sq.y = pawn.y + delta_y;
+    if (is_within_bounds(landing_sq)) {
+        // TODO: check for promotion before adding move to arraylist
+        //al_add(moves, &move);
+        boards.boards[boards.len] = apply_move(basis, piece, landing_sq, is_white_turn);
+        boards.len += 1;
+    }
+
+    // can move 1 more square if in start position
+    if (in_start_pos) {
+        landing_sq.y += delta_y;
+        if (prospect_move(&move))
+            al_add(moves, &move);
+    }
+
+    // attack moves
+    move.dest.y = origin->y + delta_y;
+
+    move.dest.x = origin->x - 1; // left
+    if (prospect_move(&move) && move.delta != 0)
+        al_add(moves, &move);
+
+    move.dest.x = origin->x + 1; // right
+    if (prospect_move(&move) && move.delta != 0)
+        al_add(moves, &move);
+}
+
 /**
  * board generator
  * 
@@ -235,8 +262,8 @@ evaluate(struct board board)
  * 
  * output: list of possible boards
  */
-struct board *
-generate(struct board basis, struct piece piece, bool is_white_turn)
+struct board_list
+generate(struct board * basis, struct piece * piece, bool is_white_turn)
 {
     /**
      * 1. generate all possible board states
@@ -247,33 +274,24 @@ generate(struct board basis, struct piece piece, bool is_white_turn)
      * 3. count checks against enemy
      */
 
-    // if pawn: generate vectors
-    // else, get vectors from piece.def
+    struct board_list boards;
 
-    int len = piece.def->mvt_len;
-    int valid_len = 0;
-    struct board * boards = malloc(len * sizeof(struct board));
+    if (piece->def->sym == WP || piece->def->sym == BP)
+        boards = generate_pawn(basis, piece, is_white_turn);
+    //else if (piece->iter)
+    //    iterative_moves(moves, piece);
+    //else
+    //    absolute_moves(&origin, moves, piece);
 
-    struct board board;
-    struct vect vector;
-    for (int i = 0; i < len; i++) {
-        board = basis;
-
-        if (piece.def->sym == WP || piece.def->sym == BP)
-            pawn_moves(board, piece, vector, is_white_turn);
-        else if (piece->iter)
-            iterative_moves(moves, piece);
-        else
-            absolute_moves(&origin, moves, piece);
-    }
+    return boards;
 }
 
-void
-move(int board[8][8], struct vect * origin, struct vect * dest)
-{
-    board[dest->x][dest->y] = board[origin->x][origin->y];
-    board[origin->x][origin->y] = EE;
-}
+//void
+//move(int board[8][8], struct vect * origin, struct vect * dest)
+//{
+//    board[dest->x][dest->y] = board[origin->x][origin->y];
+//    board[origin->x][origin->y] = EE;
+//}
 
 /**
  * Finds the pieces that can move to given destination.
