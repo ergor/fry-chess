@@ -8,8 +8,15 @@
 #include "san.h"
 #include "al.h"
 
-/* organized as [x][y] */
-int board[8][8] = {
+
+/**
+ * Board organization
+ * 
+ *  0,0 --- 7,0 
+ *   |   \   |
+ *  0,7 --- 7,7 
+ */
+int full_board[8][8] = {
     { BR, BP, EE, EE, EE, EE, WP, WR },
     { BN, BP, EE, EE, EE, EE, WP, WN },
     { BB, BP, EE, EE, EE, EE, WP, WB },
@@ -18,6 +25,11 @@ int board[8][8] = {
     { BB, BP, EE, EE, EE, EE, WP, WB },
     { BN, BP, EE, EE, EE, EE, WP, WN },
     { BR, BP, EE, EE, EE, EE, WP, WR }
+};
+
+struct board m_board = {
+    .len = STARTING_PIECES_COUNT,
+    .pieces = starting_pieces
 };
 
 void
@@ -30,8 +42,14 @@ print_board_files()
 }
 
 void
-print_board()
+print_board(struct board board)
 {
+    int full_board[8][8];
+    memset(full_board, ' ', 64);
+
+    for (int i = 0; i < board.len; i++)
+        full_board[board.pieces[i].x][board.pieces[i].y] = board.pieces[i].def->sym;
+
     print_board_files();
 
     for (int y = 0; y < 8; y++) {
@@ -43,9 +61,9 @@ print_board()
             }
 
             if ((x+y) & 1)
-                printf("%s %c ", RST_INVERT, board[x][y]);
+                printf("%s %c ", RST_INVERT, full_board[x][y]);
             else
-                printf("%s %c ", INVERT, board[x][y]);
+                printf("%s %c ", INVERT, full_board[x][y]);
 
         }
         printf("%s\n", RST_INVERT);
@@ -72,56 +90,57 @@ void print_moves_al(char piece, vect_list_t * moves)
     printf("\n");
 }
 
-/**
- * Mutates: move
- */
-bool
-prospect_move(struct move * move)
-{
-    struct vect * dest = &(move->dest);
-    bool within_bounds = dest->x >= 0 && dest->x < 8 && dest->y >= 0 && dest->y < 8;
 
-    move->delta = 0;
+// /**
+//  * Mutates: move
+//  */
+// bool
+// prospect_move(struct move * move)
+// {
+//     struct vect * dest = &(move->dest);
+//     bool within_bounds = dest->x >= 0 && dest->x < 8 && dest->y >= 0 && dest->y < 8;
+// 
+//     move->delta = 0;
+// 
+//     if (!within_bounds)
+//         return false;
+// 
+//     int landing_sq = board[dest->x][dest->y];
+// 
+//     if (landing_sq != EE) {
+//         move->delta = -pieces[landing_sq].val;
+//     }
+// 
+//     return within_bounds;
+// }
 
-    if (!within_bounds)
-        return false;
+// /**
+//  * Args:
+//  *  <out> moves: the moves are added to this arraylist
+//  */
+// void
+// absolute_moves(struct vect * origin, move_list_t * moves, struct piece * piece)
+// {
+//     struct move move;
+// 
+//     for (int i = 0; i < piece->mvt_len; i++) {
+//         move.dest.x = origin->x + piece->mvt[i].x;
+//         move.dest.y = origin->y + piece->mvt[i].y;
+//         if (prospect_move(&move)) {
+//             al_add(moves, &move);
+//         }
+//     }
+// }
 
-    int landing_sq = board[dest->x][dest->y];
-
-    if (landing_sq != EE) {
-        move->delta = -pieces[landing_sq].val;
-    }
-
-    return within_bounds;
-}
-
-/**
- * Args:
- *  <out> moves: the moves are added to this arraylist
- */
-void
-absolute_moves(struct vect * origin, move_list_t * moves, struct piece * piece)
-{
-    struct move move;
-
-    for (int i = 0; i < piece->mvt_len; i++) {
-        move.dest.x = origin->x + piece->mvt[i].x;
-        move.dest.y = origin->y + piece->mvt[i].y;
-        if (prospect_move(&move)) {
-            al_add(moves, &move);
-        }
-    }
-}
-
-/**
- * Args:
- *  <out> moves: the moves are added to this arraylist
- */
-void
-iterative_moves(move_list_t * moves, struct piece * piece)
-{
-
-}
+// /**
+//  * Args:
+//  *  <out> moves: the moves are added to this arraylist
+//  */
+// void
+// iterative_moves(move_list_t * moves, struct piece * piece)
+// {
+// 
+// }
 
 /**
  * Args:
@@ -163,26 +182,90 @@ pawn_moves(struct vect * origin, move_list_t * moves, bool is_white)
         al_add(moves, &move);
 }
 
+// /**
+//  * Finds all legal moves
+//  * Return: moves as arraylist of struct move
+//  * Args:
+//  */
+// move_list_t *
+// find_moves(struct vect origin)
+// {
+//     move_list_t * moves = NEW_MOVE_LIST();
+
+//     struct piece * piece = &(pieces[board[origin.x][origin.y]]);
+
+//     if (piece->sym == WP || piece->sym == BP)
+//         pawn_moves(&origin, moves, piece->sym == WP);
+//     else if (piece->iter)
+//         iterative_moves(moves, piece);
+//     else
+//         absolute_moves(&origin, moves, piece);
+
+//     return moves;
+// }
+
 /**
- * Finds all legal moves
- * Return: moves as arraylist of struct move
- * Args:
+ * evaluation function
+ * 
+ * input: the board, ie. list of pieces
+ *      where: piece = {x,y,value}
+ * 
+ * output: value of given board
  */
-move_list_t *
-find_moves(struct vect origin)
+int
+evaluate(struct board board)
 {
-    move_list_t * moves = NEW_MOVE_LIST();
+    int sum = 0;
+    for (int i = 0; i < board.len; i++) {
+        sum += board.pieces[i].def->val;
+    }
+    return sum;
+}
 
-    struct piece * piece = &(pieces[board[origin.x][origin.y]]);
+/**
+ * board generator
+ * 
+ * if return is empty list, then no legal moves can be made:
+ *      if number of checks > 0: check mate
+ *      else: stalemate
+ * 
+ * input: the piece to move in given board state
+ *      where: board = {pieces}
+ *             piece = {x,y,value}
+ * 
+ * output: list of possible boards
+ */
+struct board *
+generate(struct board basis, struct piece piece, bool is_white_turn)
+{
+    /**
+     * 1. generate all possible board states
+     * 2. discard illegal states:
+     *      - piece lands on/passes through own
+     *      - piece lands out of bounds
+     *      - board states where im in check
+     * 3. count checks against enemy
+     */
 
-    if (piece->sym == WP || piece->sym == BP)
-        pawn_moves(&origin, moves, piece->sym == WP);
-    else if (piece->iter)
-        iterative_moves(moves, piece);
-    else
-        absolute_moves(&origin, moves, piece);
+    // if pawn: generate vectors
+    // else, get vectors from piece.def
 
-    return moves;
+    int len = piece.def->mvt_len;
+    int valid_len = 0;
+    struct board * boards = malloc(len * sizeof(struct board));
+
+    struct board board;
+    struct vect vector;
+    for (int i = 0; i < len; i++) {
+        board = basis;
+
+        if (piece.def->sym == WP || piece.def->sym == BP)
+            pawn_moves(board, piece, vector, is_white_turn);
+        else if (piece->iter)
+            iterative_moves(moves, piece);
+        else
+            absolute_moves(&origin, moves, piece);
+    }
 }
 
 void
@@ -421,7 +504,7 @@ interactive()
 int
 main(int argc, char ** argv)
 {
-    init_pieces();
+    init_piece_defs();
     #if TEST == 1
     test();
     #endif
