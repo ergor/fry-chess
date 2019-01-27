@@ -309,7 +309,7 @@ apply_move_eval(struct board * basis_board, struct piece * moving_piece,
 struct board_list
 generate_pawn(struct board * basis_board, struct piece * moving_piece, bool is_white_turn)
 {
-    struct board_list boards = {
+    struct board_list board_list = {
         .len = 0,
         .boards = malloc(moving_piece->def->mvt_len * sizeof(struct board))
     };
@@ -326,31 +326,48 @@ generate_pawn(struct board * basis_board, struct piece * moving_piece, bool is_w
     int piece_idx;
     if (is_within_bounds(landing_sq)) {
         // TODO: check for promotion before adding move to arraylist
+        // only legal if landing_sq is empty:
         piece_idx = piece_index_at(basis_board, landing_sq);
-        if (piece_idx < 0 || is_enemy(basis_board->pieces[piece_idx], is_white_turn)) {
-            // landing_sq is an empty square or an enemy
-            boards.boards[boards.len] = apply_move_eval(basis_board, moving_piece, landing_sq, is_white_turn);
-            boards.len += 1;
+        //if (piece_idx < 0 || is_enemy(basis_board->pieces[piece_idx], is_white_turn)) {
+        if (piece_idx < 0) {
+            board_list.boards[board_list.len++] = apply_move_eval(basis_board, moving_piece, landing_sq, is_white_turn);
         }
+    }
+    else {
+        // if this move is out of bounds, no other moves will be in bounds
+        return board_list;
     }
 
     // can move 1 more square if in start position
     if (in_start_pos) {
         landing_sq.y += delta_y;
-        if (prospect_move(&move))
-            al_add(moves, &move);
+        // only legal if landing_sq is empty:
+        piece_idx = piece_index_at(basis_board, landing_sq);
+        if (piece_idx < 0) {
+            board_list.boards[board_list.len++] = apply_move_eval(basis_board, moving_piece, landing_sq, is_white_turn);
+        }
     }
 
     // attack moves
-    move.dest.y = origin->y + delta_y;
+    // TODO: generalization refactor + bound checks
+    landing_sq = moving_piece->pos;
+    landing_sq.y += delta_y;
 
-    move.dest.x = origin->x - 1; // left
-    if (prospect_move(&move) && move.delta != 0)
-        al_add(moves, &move);
+    landing_sq.x = moving_piece->pos.x - 1; // left
+    piece_idx = piece_index_at(basis_board, landing_sq);
+    if (piece_idx >= 0 // only available if non empty square is enemy
+        && is_enemy(basis_board->pieces[piece_idx], is_white_turn))
+    {
+        board_list.boards[board_list.len++] = apply_move_eval(basis_board, moving_piece, landing_sq, is_white_turn);
+    }
 
-    move.dest.x = origin->x + 1; // right
-    if (prospect_move(&move) && move.delta != 0)
-        al_add(moves, &move);
+    landing_sq.x = moving_piece->pos.x + 1; // right
+    piece_idx = piece_index_at(basis_board, landing_sq);
+    if (piece_idx >= 0 // only available if non empty square is enemy
+        && is_enemy(basis_board->pieces[piece_idx], is_white_turn))
+    {
+        board_list.boards[board_list.len++] = apply_move_eval(basis_board, moving_piece, landing_sq, is_white_turn);
+    }
 }
 
 /**
