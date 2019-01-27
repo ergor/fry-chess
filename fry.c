@@ -188,46 +188,150 @@ is_within_bounds(struct vect landing_sq)
     return landing_sq.x >= 0 && landing_sq.x < 8 && landing_sq.y >= 0 && landing_sq.y < 8;
 }
 
-struct board
-apply_move(struct board * basis, struct piece * piece, 
-           struct vect landing_sq, bool is_white_turn)
+__always_inline bool
+is_enemy(struct piece piece, bool is_white_turn)
+{
+
+}
+
+__always_inline bool
+is_same_square(struct vect pos1, struct vect pos2)
+{
+    return pos1.x == pos2.x && pos1.y == pos2.y;
+}
+
+__always_inline int
+map_2d_to_1d(struct vect pos)
+{
+    return pos.y * 8 + pos.x;
+}
+
+int
+piece_index_at(struct board * board, struct vect pos)
 {
     /** 
-     * search for correct piece:
-     * - the pieces in the list maintain sorted-by-position order (0,0=>0; 7;7=>63)
-     * - do tree search, ie:
+     * search for piece in the board:
+     * - the pieces in the list maintain sorted order (0,0=>0; 7;7=>63)
+     * - tree search:
      *  - split search area and get value of element in the intersection
+     *  - if needle == element: break
      *  - if needle < element: tree search lower half
      *  - if needle > element: tree search upper half
-     *  - if needle == element: replace this piece if enemy else illegal
-     *  - if none of the above: update piece and swap positions
      */
+    int upper = board->len;
+    int lower = 0;
+    int i = upper >> 1;
+
+    int needle = map_2d_to_1d(pos);
+    int temp;
+    while ((temp = map_2d_to_1d(board->pieces[i].pos)) != needle) {
+        if (upper - lower <= 1)
+            return -1; // this happens when needle is not in haystack
+        if (needle < temp)
+            upper = i;
+        else
+            lower = i;
+        i = lower + ((upper - lower) >> 1);
+    }
+
+    return i;
+}
+
+/**
+ * generates and evaluates a new board state
+ */
+struct board
+apply_move_eval(struct board * basis_board, struct piece * moving_piece, 
+                struct vect landing_sq, bool is_white_turn)
+{
+    /**
+     * 1. allocate memory for pieces of board under construction
+     * 2. copy pieces from basis board:
+     *  - for each piece in basis board:
+     *      - if the moving piece:
+     *          - update position and copy
+     *      - if piece is enemy and position == landing square:
+     *          - skip copy
+     *      - else: copy
+     */
+    struct board new_board;
+    struct piece * new_piece_arr = malloc(basis_board->len * sizeof(struct piece));
+
+    // for ensuring sorted order:
+    int landing_sq_1d = map_2d_to_1d(landing_sq);
+    int moving_piece_wr_idx = -1;
+
+    int wr_idx = 0;
+    struct piece temp_piece;
+    for (int rd_idx = 0; rd_idx < basis_board->len; rd_idx++) {
+        // make temporary copy of piece from basis board
+        temp_piece = basis_board->pieces[rd_idx];
+
+        if(moving_piece_wr_idx == -1
+           && map_2d_to_1d(temp_piece.pos) >= landing_sq_1d)
+        {
+            moving_piece_wr_idx = wr_idx;
+            wr_idx += 1;
+        }
+
+        if (is_same_square(temp_piece.pos, landing_sq)) {
+            /**
+             * this case will never occur if landing_sq is an empty square.
+             * thus if this case fires, the square is NOT empty, AND:
+             * assuming landing_sq is always legal, then:
+             * temp_piece will always be an enemy, and we have a capture.
+             * don't copy the enemy piece to the new board state.
+             */
+            continue;
+        }
+
+        if (is_same_square(temp_piece.pos, moving_piece->pos)) {
+            // if the moving piece, apply the move
+            temp_piece.pos = landing_sq;
+            new_piece_arr[moving_piece_wr_idx] = temp_piece;
+            goto finally;
+        }
+
+        // copy temp piece into new array and update board evaluation
+        new_piece_arr[wr_idx++] = temp_piece;
+    finally:
+        new_board.sum += temp_piece.def->val;
+
+        // TODO: count checks
+    }
+
+    new_board.len = wr_idx;
+    new_board.pieces = new_piece_arr;
+
+    return new_board;
 }
 
 struct board_list
-generate_pawn(struct board * basis, struct piece * piece, bool is_white_turn)
+generate_pawn(struct board * basis_board, struct piece * moving_piece, bool is_white_turn)
 {
-    struct piece pawn = *piece;
-
     struct board_list boards = {
         .len = 0,
-        .boards = malloc(pawn.def->mvt_len * sizeof(struct board))
+        .boards = malloc(moving_piece->def->mvt_len * sizeof(struct board))
     };
 
-    bool in_start_pos = is_white_turn ? pawn.y == WP_START_RANK 
-                                      : pawn.y == BP_START_RANK;
+    bool in_start_pos = is_white_turn ? moving_piece->pos.y == WP_START_RANK 
+                                      : moving_piece->pos.y == BP_START_RANK;
 
     struct vect landing_sq;
     int delta_y = is_white_turn ? -1 : 1;
 
     // initialize move + do regular move
-    landing_sq.x = pawn.x;
-    landing_sq.y = pawn.y + delta_y;
+    landing_sq = moving_piece->pos;
+    landing_sq.y += delta_y;
+    int piece_idx;
     if (is_within_bounds(landing_sq)) {
         // TODO: check for promotion before adding move to arraylist
-        //al_add(moves, &move);
-        boards.boards[boards.len] = apply_move(basis, piece, landing_sq, is_white_turn);
-        boards.len += 1;
+        piece_idx = piece_index_at(basis_board, landing_sq);
+        if (piece_idx < 0 || is_enemy(basis_board->pieces[piece_idx], is_white_turn)) {
+            // landing_sq is an empty square or an enemy
+            boards.boards[boards.len] = apply_move_eval(basis_board, moving_piece, landing_sq, is_white_turn);
+            boards.len += 1;
+        }
     }
 
     // can move 1 more square if in start position
@@ -263,7 +367,7 @@ generate_pawn(struct board * basis, struct piece * piece, bool is_white_turn)
  * output: list of possible boards
  */
 struct board_list
-generate(struct board * basis, struct piece * piece, bool is_white_turn)
+generate(struct board * basis_board, struct piece * moving_piece, bool is_white_turn)
 {
     /**
      * 1. generate all possible board states
@@ -276,8 +380,8 @@ generate(struct board * basis, struct piece * piece, bool is_white_turn)
 
     struct board_list boards;
 
-    if (piece->def->sym == WP || piece->def->sym == BP)
-        boards = generate_pawn(basis, piece, is_white_turn);
+    if (moving_piece->def->sym == WP || moving_piece->def->sym == BP)
+        boards = generate_pawn(basis_board, moving_piece, is_white_turn);
     //else if (piece->iter)
     //    iterative_moves(moves, piece);
     //else

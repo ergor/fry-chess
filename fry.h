@@ -62,13 +62,13 @@ struct piece_def {
 };
 
 struct piece {
-    int x;
-    int y;
+    struct vect pos;
     struct piece_def * def;
 };
 
 struct board {
     int len;                /* number of pieces on the board */
+    int sum;                /* board evaluation */
     int white_checks;       /* number of checks against white king */
     int black_checks;       /* number of checks against black king */
     struct piece * pieces;  /* the pieces on the board (consecutive) */
