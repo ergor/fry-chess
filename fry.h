@@ -66,6 +66,12 @@ struct piece {
     struct piece_def * def;
 };
 
+/* a light weight cousin to struct board */
+struct piece_list {
+    int len;
+    struct piece * pieces;
+};
+
 struct board {
     int len;                /* number of pieces on the board */
     int sum;                /* board evaluation */
