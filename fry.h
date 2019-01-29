@@ -30,12 +30,12 @@
 #define VAL_WN  300     /* white knight */
 #define VAL_WB  300     /* white bishop */
 
-#define VAL_BP  -100    /* black pawn   */
-#define VAL_BK  -99999  /* black king   */
-#define VAL_BQ  -900    /* black queen  */
-#define VAL_BR  -500    /* black rook   */
-#define VAL_BN  -300    /* black knight */
-#define VAL_BB  -300    /* black bishop */
+#define VAL_BP  -VAL_WP     /* black pawn   */
+#define VAL_BK  -VAL_WK     /* black king   */
+#define VAL_BQ  -VAL_WQ     /* black queen  */
+#define VAL_BR  -VAL_WR     /* black rook   */
+#define VAL_BN  -VAL_WN     /* black knight */
+#define VAL_BB  -VAL_WB     /* black bishop */
 
 #define WP_START_RANK   6
 #define BP_START_RANK   1

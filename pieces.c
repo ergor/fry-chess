@@ -19,6 +19,7 @@ struct vect queen_mvt[Q_MVT_LEN] = {
 };
 
 struct piece_def white_queen = {
+    .sym = WQ,
     .val = VAL_WQ,
     .iter = true,
     .mvt_len = Q_MVT_LEN,
@@ -26,6 +27,7 @@ struct piece_def white_queen = {
 };
 
 struct piece_def black_queen = {
+    .sym = BQ,
     .val = VAL_BQ,
     .iter = true,
     .mvt_len = Q_MVT_LEN,
@@ -46,6 +48,7 @@ struct vect rook_mvt[R_MVT_LEN] = {
 };
 
 struct piece_def white_rook = {
+    .sym = WR,
     .val = VAL_WR,
     .iter = true,
     .mvt_len = R_MVT_LEN,
@@ -53,6 +56,7 @@ struct piece_def white_rook = {
 };
 
 struct piece_def black_rook = {
+    .sym = BR,
     .val = VAL_BR,
     .iter = true,
     .mvt_len = R_MVT_LEN,
@@ -73,6 +77,7 @@ struct vect bishop_mvt[B_MVT_LEN] = {
 };
 
 struct piece_def white_bishop = {
+    .sym = WB,
     .val = VAL_WB,
     .iter = true,
     .mvt_len = B_MVT_LEN,
@@ -80,6 +85,7 @@ struct piece_def white_bishop = {
 };
 
 struct piece_def black_bishop = {
+    .sym = BB,
     .val = VAL_BB,
     .iter = true,
     .mvt_len = B_MVT_LEN,
@@ -93,6 +99,7 @@ struct piece_def black_bishop = {
 #define P_MVT_LEN   4
 
 struct piece_def white_pawn = {
+    .sym = WP,
     .val = VAL_WP,
     .iter = false,
     .mvt_len = P_MVT_LEN,
@@ -100,6 +107,7 @@ struct piece_def white_pawn = {
 };
 
 struct piece_def black_pawn = {
+    .sym = BP,
     .val = VAL_BP,
     .iter = false,
     .mvt_len = P_MVT_LEN,
@@ -124,6 +132,7 @@ struct vect knight_mvt[N_MVT_LEN] = {
 };
 
 struct piece_def white_knight = {
+    .sym = WN,
     .val = VAL_WN,
     .iter = false,
     .mvt_len = N_MVT_LEN,
@@ -131,6 +140,7 @@ struct piece_def white_knight = {
 };
 
 struct piece_def black_knight = {
+    .sym = BN,
     .val = VAL_BN,
     .iter = false,
     .mvt_len = N_MVT_LEN,
@@ -155,6 +165,7 @@ struct vect king_mvt[K_MVT_LEN] = {
 };
 
 struct piece_def white_king = {
+    .sym = WK,
     .val = VAL_WK,
     .iter = false,
     .mvt_len = K_MVT_LEN,
@@ -162,6 +173,7 @@ struct piece_def white_king = {
 };
 
 struct piece_def black_king = {
+    .sym = BK,
     .val = VAL_BK,
     .iter = false,
     .mvt_len = K_MVT_LEN,
