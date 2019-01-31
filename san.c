@@ -10,40 +10,43 @@
 
 /**
  * Args:
- *  move_num: current move number of this game
+ *  san_string:
+ *         ply: current half-turn of the game
  */
-struct san_move
-san_to_move(char * san, int move_num)
+struct move
+san_to_move(char * san_string, int ply)
 {
     char msgbuf[1024];
 
-    bool black_turn = move_num & 1;
+    bool black_turn = ply & 1;
 
-    char piece = 'X';
-    struct vect dest = { .x = -1, .y = -1 };
-    
+    char piece = REGEX_NO_MATCH;
+    struct vect landing_sq = { .x = -1, .y = -1 };
+
     regex_t regex;
-    size_t nmatch = 3; /* 0: the whole match, 1: capture group 1, 2: capture group 2 */
-    regmatch_t match[nmatch];
+    regmatch_t match[REGEX_GROUP_SZ];
 
-    int reti = regcomp(&regex, "([RNBQK])*x*([a-h][1-8])", REG_EXTENDED);
+    int reti = regcomp(&regex, SAN_REGEX, REG_EXTENDED);
     if (reti) {
         fprintf(stderr, "failed to compile regex\n");
         exit(reti);
     }
 
-    reti = regexec(&regex, san, nmatch, match, 0);
+    reti = regexec(&regex, san_string, REGEX_GROUP_SZ, match, 0);
     if (reti == 0) {
-        regmatch_t r_piece = match[1];
-        regmatch_t r_move = match[2];
-
         piece = 'P';
 
-        if (r_piece.rm_eo >= 0 || r_piece.rm_so >= 0)
-            piece = san[r_piece.rm_so];
+        if (REGMATCH_PIECE(match).rm_eo >= 0
+            || REGMATCH_PIECE(match).rm_so >= 0)
+        {
+            piece = san_string[REGMATCH_PIECE(match).rm_so];
+        }
 
-        dest.x = san[r_move.rm_so] - 'a';
-        dest.y = 7 - (san[r_move.rm_eo - 1] - '1');
+        if (black_turn)
+            piece += 0x20; // to_lower for black move
+
+        landing_sq.x = san_string[REGMATCH_LAND_SQ(match).rm_so] - 'a';
+        landing_sq.y = 7 - (san_string[REGMATCH_LAND_SQ(match).rm_eo -1] - '1');
     }
     else if (reti == REG_NOMATCH) {
         fprintf(stderr, "no match found\n");
@@ -54,11 +57,23 @@ san_to_move(char * san, int move_num)
         //exit(reti);
     }
 
-    if (black_turn)
-        piece += 0x20; // lower case for black pieces
+    
 
     regfree(&regex);
-    struct san_move san_move = { .piece = piece, .dest = dest };
+    struct move move = { .piece = piece, .landing_sq = landing_sq };
 
-    return san_move;
+    return move;
+}
+
+void
+print_move(struct move move)
+{
+    printf("move:\n  piece: %c\n  from_file: %d\n  from_rank: %d\n  ",
+            move.piece,
+            move.from_file,
+            move.from_rank);
+    printf("landing_sq:\n    x: %d\n    y: %d\n  capture: %d\n\n",
+            move.landing_sq.x,
+            move.landing_sq.y,
+            move.capture);
 }

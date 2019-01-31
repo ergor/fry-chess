@@ -2,10 +2,10 @@
 CC=gcc
 CFLAGS=-g -Wall -I.
 
-DEPS=fry.h san.h al.h
+DEPS=fry.h san.h
 
 ODIR=obj
-_OBJ=fry.o san.o pieces.o al.o
+_OBJ=fry.o san.o pieces.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 

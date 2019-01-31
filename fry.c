@@ -152,7 +152,13 @@ apply_move_eval(struct board * basis_board, struct piece * moving_piece,
      *          - skip copy
      *      - else: copy
      */
-    struct board new_board;
+    struct board new_board = {
+        .len = 0,
+        .sum = 0,
+        .white_checks = 0,
+        .black_checks = 0,
+        .pieces = NULL
+    };
     struct piece * new_piece_arr = malloc(basis_board->len * sizeof(struct piece));
 
     // for ensuring sorted order:
@@ -279,13 +285,25 @@ generate_pawn(struct board * basis_board, struct piece * moving_piece, bool is_w
 struct board_list
 generate_iter(struct board * basis_board, struct piece * moving_piece, bool is_white_turn)
 {
+    #warning generate_iter() is not implemented
+    struct board_list board_list = {
+        .len = 0,
+        .boards = NULL
+    };
 
+    return board_list;
 }
 
 struct board_list
 generate_abs(struct board * basis_board, struct piece * moving_piece, bool is_white_turn)
 {
+    #warning generate_abs() is not implemented
+    struct board_list board_list = {
+        .len = 0,
+        .boards = NULL
+    };
 
+    return board_list;
 }
 
 /**
@@ -330,7 +348,7 @@ generate(struct board * basis_board, struct piece * moving_piece, bool is_white_
  * Args: <in> san_move: the destination
  */
 struct piece_list
-find_moving_pieces(struct board * basis_board, struct san_move san_move, bool is_white_turn)
+find_moving_pieces(struct board * basis_board, struct move move, bool is_white_turn)
 {
     /**
      * 1. generate all possible boards from this state
@@ -345,18 +363,25 @@ find_moving_pieces(struct board * basis_board, struct san_move san_move, bool is
     struct board_list temp_board_list;
     for (int i = 0; i < basis_board->len; i++) { // for each piece on board
 
+        if (is_enemy(basis_board->pieces[i], is_white_turn))
+            continue; // skip; only interested in moves current player can make
+
         temp_board_list = generate(basis_board, &basis_board->pieces[i], is_white_turn);
-        for (int j = 0; j < temp_board_list.len; j++) { // for each move said piece can make
+        for (int j = 0; j < temp_board_list.len; j++) { // for each board state said piece generates
 
             struct board temp_board = temp_board_list.boards[j];
-            for (int k = 0; k < temp_board.len; k++) { // for each piece in resulting board after said move
-                if (temp_board.pieces[k].def->sym == san_move.piece) {
+            for (int k = 0; k < temp_board.len; k++) { // for each piece in said board state
+            // TODO: why does is_enemy retain arguments from first call?
+                if (is_enemy(temp_board.pieces[k], is_white_turn))
+                    continue; // skip; only interested in moves current player can make
+                if (is_same_square(temp_board.pieces[k].pos, move.landing_sq)) {
                     // copy this piece to result list
                     piece_list.pieces[piece_list.len++] = temp_board.pieces[k];
                 }
             }
         }
-        free_board_list(temp_board_list);
+        if (temp_board_list.boards != NULL)
+            free_board_list(temp_board_list);
     }
 
     return piece_list;
@@ -471,18 +496,18 @@ test()
     free_board_list(board_list);
 
     printf("algebraic notation:\n");
-    struct san_move san_test_moves[2];
+    struct move san_test_moves[2];
     san_test_moves[0] = san_to_move("Nf3", 0); // white moves
     san_test_moves[1] = san_to_move("c5", 1);  // black moves
-    //printf("\tNf3 -> ");
-    //print_moves(san_test_moves[0].piece, &(san_test_moves[0].dest), 1);
-    //printf("\tc5 -> ");
-    //print_moves(san_test_moves[1].piece, &(san_test_moves[1].dest), 1);
+    printf("\tNf3 ->\n");
+    print_move(san_test_moves[0]);
+    printf("\tc5 ->\n");
+    print_move(san_test_moves[1]);
 
 
-    //printf("finding the pieces to move:\n");
-    //vect_list_t * origins = find_origin(san_test_moves[0]);
-    //printf("\tNf3 -> from ");
+    printf("finding the pieces to move:\n");
+    struct piece_list moving_pieces = find_moving_pieces(&m_board, san_test_moves[0], true);
+    printf("\tNf3 -> from ");
     //print_moves_al(san_test_moves[0].piece, origins);
     //al_free(origins);
     //origins = find_origin(san_test_moves[1]);

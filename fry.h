@@ -48,11 +48,6 @@ struct vect {
     int y;
 };
 
-struct move {
-    struct vect dest;   /* where this move lands */
-    int delta;          /* board value change if this move is performed */
-};
-
 struct piece_def {
     int  val;                /* centipawn value of piece */
     char sym;               /* ASCII representation of the piece */
