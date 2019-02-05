@@ -26,11 +26,11 @@
 #define REGMATCH_LAND_SQ(regmatch)     (regmatch[5])
 
 struct move {
-    char piece;
-    int from_file;
-    int from_rank;
-    struct vect landing_sq;
-    bool capture;
+    char piece;             /* the ASCII representation of the piece */
+    int from_file;          /* */
+    int from_rank;          /* */
+    struct vect landing_sq; /* */
+    bool capture;           /* */
 };
 
 struct move san_to_move(char * san_string, int ply);

@@ -68,11 +68,11 @@ san_to_move(char * san_string, int ply)
 void
 print_move(struct move move)
 {
-    printf("move:\n  piece: %c\n  from_file: %d\n  from_rank: %d\n  ",
+    printf("move struct:\n  piece: %c\n  from_file: %d\n  from_rank: %d\n",
             move.piece,
             move.from_file,
             move.from_rank);
-    printf("landing_sq:\n    x: %d\n    y: %d\n  capture: %d\n\n",
+    printf("  landing_sq:\n    x: %d\n    y: %d\n  capture: %d\n\n",
             move.landing_sq.x,
             move.landing_sq.y,
             move.capture);

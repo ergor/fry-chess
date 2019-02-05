@@ -162,6 +162,7 @@ apply_move_eval(struct board * basis_board, struct piece * moving_piece,
     struct piece * new_piece_arr = malloc(basis_board->len * sizeof(struct piece));
 
     // for ensuring sorted order:
+    int current_sq_1d = map_2d_to_1d(moving_piece->pos);
     int landing_sq_1d = map_2d_to_1d(landing_sq);
     int moving_piece_wr_idx = -1;
 
@@ -171,6 +172,10 @@ apply_move_eval(struct board * basis_board, struct piece * moving_piece,
         // make temporary copy of piece from basis board
         temp_piece = basis_board->pieces[rd_idx];
 
+        /** 
+         * case: moving piece 1d index decreases after move.
+         * action: store that write index
+         */
         if(moving_piece_wr_idx == -1
            && map_2d_to_1d(temp_piece.pos) >= landing_sq_1d)
         {
@@ -192,6 +197,11 @@ apply_move_eval(struct board * basis_board, struct piece * moving_piece,
         if (is_same_square(temp_piece.pos, moving_piece->pos)) {
             // if the moving piece, apply the move
             temp_piece.pos = landing_sq;
+            /** 
+             * CULPRIT: when black to move, moving_piece_wr_idx is still -1.
+             * FIX: need to update moving piece position right at the beginning,
+             * to ensure i get correct 1d index.
+             */
             new_piece_arr[moving_piece_wr_idx] = temp_piece;
             goto finally;
         }
@@ -218,6 +228,9 @@ pawn_attack(struct board_list * board_list, struct board * basis_board,
     landing_sq.x += vector.x;
     landing_sq.y += vector.y;
 
+    if (!is_within_bounds(landing_sq))
+        return;
+
     struct piece * temp_piece = piece_at(basis_board, landing_sq);
     if (temp_piece && is_enemy(*temp_piece, is_white_turn)) {
         // only available if non empty square is enemy
@@ -233,10 +246,11 @@ pawn_advance(struct board_list * board_list, struct board * basis_board,
     struct vect landing_sq = pawn->pos;
     landing_sq.y += vector.y;
 
+    if (!is_within_bounds(landing_sq))
+        return;
+
     struct piece * temp_piece = piece_at(basis_board, landing_sq);
-    if (temp_piece == NULL
-        && is_within_bounds(landing_sq))
-    {
+    if (temp_piece == NULL) {
         board_list->boards[board_list->len++]
             = apply_move_eval(basis_board, pawn, landing_sq, is_white_turn);
     }
@@ -363,20 +377,20 @@ find_moving_pieces(struct board * basis_board, struct move move, bool is_white_t
     struct board_list temp_board_list;
     for (int i = 0; i < basis_board->len; i++) { // for each piece on board
 
-        if (is_enemy(basis_board->pieces[i], is_white_turn))
-            continue; // skip; only interested in moves current player can make
+        if (basis_board->pieces[i].def->sym != move.piece)
+            continue; // skip; only interested in moves of moving_piece
 
         temp_board_list = generate(basis_board, &basis_board->pieces[i], is_white_turn);
         for (int j = 0; j < temp_board_list.len; j++) { // for each board state said piece generates
 
             struct board temp_board = temp_board_list.boards[j];
             for (int k = 0; k < temp_board.len; k++) { // for each piece in said board state
-            // TODO: why does is_enemy retain arguments from first call?
-                if (is_enemy(temp_board.pieces[k], is_white_turn))
-                    continue; // skip; only interested in moves current player can make
-                if (is_same_square(temp_board.pieces[k].pos, move.landing_sq)) {
+                struct piece temp_piece = temp_board.pieces[k];
+                if (temp_piece.def->sym == move.piece
+                    && is_same_square(temp_piece.pos, move.landing_sq))
+                {
                     // copy this piece to result list
-                    piece_list.pieces[piece_list.len++] = temp_board.pieces[k];
+                    piece_list.pieces[piece_list.len++] = temp_piece;
                 }
             }
         }
@@ -482,6 +496,17 @@ game_loop(bool i_am_white)
     }
 }
 
+void
+print_piece_list(struct piece_list piece_list)
+{
+    for (int i = 0; i < piece_list.len; i++) {
+        printf("  %c@(%d, %d)\n",
+            piece_list.pieces[i].def->sym,
+            piece_list.pieces[i].pos.x,
+            piece_list.pieces[i].pos.y);
+    }
+}
+
 int
 test()
 {
@@ -508,12 +533,12 @@ test()
     printf("finding the pieces to move:\n");
     struct piece_list moving_pieces = find_moving_pieces(&m_board, san_test_moves[0], true);
     printf("\tNf3 -> from ");
-    //print_moves_al(san_test_moves[0].piece, origins);
-    //al_free(origins);
-    //origins = find_origin(san_test_moves[1]);
-    //printf("\tc5 -> from ");
-    //print_moves_al(san_test_moves[1].piece, origins);
-    //al_free(origins);
+    print_piece_list(moving_pieces);
+    free(moving_pieces.pieces);
+    moving_pieces = find_moving_pieces(&m_board, san_test_moves[1], false);
+    printf("\tc5 -> from ");
+    print_piece_list(moving_pieces);
+    free(moving_pieces.pieces);
 
     return 0;
 }
