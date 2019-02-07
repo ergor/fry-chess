@@ -101,7 +101,7 @@ is_same_square(struct vect pos1, struct vect pos2)
 __always_inline int
 map_2d_to_1d(struct vect pos)
 {
-    return pos.y * 8 + pos.x;
+    return (pos.y << 3) + pos.x;
 }
 
 struct piece *
@@ -121,11 +121,10 @@ piece_at(struct board * board, struct vect pos)
     int i = upper >> 1;
 
     int needle = map_2d_to_1d(pos);
-    int temp;
-    while ((temp = map_2d_to_1d(board->pieces[i].pos)) != needle) {
+    while (board->pieces[i].pos_1d != needle) {
         if (upper - lower <= 1)
             return NULL; // this happens when needle is not in haystack
-        if (needle < temp)
+        if (needle < board->pieces[i].pos_1d)
             upper = i;
         else
             lower = i;
@@ -133,6 +132,18 @@ piece_at(struct board * board, struct vect pos)
     }
 
     return &board->pieces[i];
+}
+
+void
+apply_move_lt()
+{
+
+}
+
+void
+apply_move_gt()
+{
+
 }
 
 /**

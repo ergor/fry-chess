@@ -57,6 +57,8 @@ struct piece_def {
 };
 
 struct piece {
+    int index;
+    int pos_1d;
     struct vect pos;
     struct piece_def * def;
 };
