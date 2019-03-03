@@ -87,6 +87,15 @@ is_within_bounds(struct vect landing_sq)
 }
 
 __always_inline bool
+is_check_state_unchanged(struct board * basis_board, struct board * new_board, bool is_white_turn)
+{
+    if (is_white_turn)
+        return basis_board->white_checks == new_board->white_checks;
+    else
+        return basis_board->black_checks == new_board->black_checks;
+}
+
+__always_inline bool
 is_enemy(struct piece piece, bool is_white_turn)
 {
     return (piece.def->sym < 'a') != is_white_turn; // != used as logical XOR
@@ -107,43 +116,17 @@ map_2d_to_1d(struct vect pos)
 struct piece *
 piece_at(struct board * board, struct vect pos)
 {
-    /**
-     * search for piece in the board:
-     * - the pieces in the list maintain sorted order (0,0=>0; 7;7=>63)
-     * - tree search:
-     *  - split search area and get value of element in the intersection
-     *  - if needle == element: break
-     *  - if needle < element: tree search lower half
-     *  - if needle > element: tree search upper half
-     */
-    int upper = board->len;
-    int lower = 0;
-    int i = upper >> 1;
-
+    struct piece * piece = NULL;
     int needle = map_2d_to_1d(pos);
-    while (board->pieces[i].pos_1d != needle) {
-        if (upper - lower <= 1)
-            return NULL; // this happens when needle is not in haystack
-        if (needle < board->pieces[i].pos_1d)
-            upper = i;
-        else
-            lower = i;
-        i = lower + ((upper - lower) >> 1);
+
+    for (int i = 0; i < board->len; i++) {
+        if (board->pieces[i].pos_1d == needle) {
+            piece = &board->pieces[i];
+            break;
+        }
     }
 
-    return &board->pieces[i];
-}
-
-void
-apply_move_lt()
-{
-
-}
-
-void
-apply_move_gt()
-{
-
+    return piece;
 }
 
 /**
@@ -172,27 +155,11 @@ apply_move_eval(struct board * basis_board, struct piece * moving_piece,
     };
     struct piece * new_piece_arr = malloc(basis_board->len * sizeof(struct piece));
 
-    // for ensuring sorted order:
-    int current_sq_1d = map_2d_to_1d(moving_piece->pos);
-    int landing_sq_1d = map_2d_to_1d(landing_sq);
-    int moving_piece_wr_idx = -1;
-
     int wr_idx = 0;
     struct piece temp_piece;
-    for (int rd_idx = 0; rd_idx < basis_board->len; rd_idx++) {
+    for (int i = 0; i < basis_board->len; i++) {
         // make temporary copy of piece from basis board
-        temp_piece = basis_board->pieces[rd_idx];
-
-        /** 
-         * case: moving piece 1d index decreases after move.
-         * action: store that write index
-         */
-        if(moving_piece_wr_idx == -1
-           && map_2d_to_1d(temp_piece.pos) >= landing_sq_1d)
-        {
-            moving_piece_wr_idx = wr_idx;
-            wr_idx += 1;
-        }
+        temp_piece = basis_board->pieces[i];
 
         if (is_same_square(temp_piece.pos, landing_sq)) {
             /**
@@ -206,20 +173,14 @@ apply_move_eval(struct board * basis_board, struct piece * moving_piece,
         }
 
         if (is_same_square(temp_piece.pos, moving_piece->pos)) {
-            // if the moving piece, apply the move
-            temp_piece.pos = landing_sq;
-            /** 
-             * CULPRIT: when black to move, moving_piece_wr_idx is still -1.
-             * FIX: need to update moving piece position right at the beginning,
-             * to ensure i get correct 1d index.
+            /**
+             * if the moving piece, apply the move
              */
-            new_piece_arr[moving_piece_wr_idx] = temp_piece;
-            goto finally;
+            temp_piece.pos = landing_sq;
         }
 
         // copy temp piece into new array and update board evaluation
         new_piece_arr[wr_idx++] = temp_piece;
-    finally:
         new_board.sum += temp_piece.def->val;
 
         // TODO: count checks
@@ -283,7 +244,6 @@ generate_pawn(struct board * basis_board, struct piece * moving_piece, bool is_w
     struct vect advance_vector   = { .x = 0, .y =     delta_y };
     struct vect advance_2_vector = { .x = 0, .y = 2 * delta_y };
 
-    struct piece * temp_piece;
     // TODO: check for promotion
     pawn_advance(&board_list, basis_board, moving_piece, advance_vector, is_white_turn);
     if (board_list.len == 0) {
@@ -322,11 +282,32 @@ generate_iter(struct board * basis_board, struct piece * moving_piece, bool is_w
 struct board_list
 generate_abs(struct board * basis_board, struct piece * moving_piece, bool is_white_turn)
 {
-    #warning generate_abs() is not implemented
     struct board_list board_list = {
         .len = 0,
-        .boards = NULL
+        .boards = malloc(moving_piece->def->mvt_len * sizeof(struct vect))
     };
+
+    struct piece_def piece_def = *moving_piece->def;
+    struct vect landing_sq;
+    for (int i = 0; i < piece_def.mvt_len; i++) {
+        landing_sq = moving_piece->pos;
+        landing_sq.x += piece_def.mvt[i].x;
+        landing_sq.y += piece_def.mvt[i].y;
+
+        if (is_within_bounds(landing_sq)) {
+            struct board new_board
+                = apply_move_eval(basis_board, moving_piece, landing_sq, is_white_turn);
+            if (is_check_state_unchanged(basis_board, &new_board, is_white_turn)) {
+                // add to board list
+                board_list.boards[board_list.len++] = new_board;
+            }
+        }
+    }
+
+    if (board_list.len == 0) {
+        free(board_list.boards);
+        board_list.boards = NULL;
+    }
 
     return board_list;
 }
@@ -370,7 +351,9 @@ generate(struct board * basis_board, struct piece * moving_piece, bool is_white_
 /**
  * Finds the pieces that can move to given destination.
  * Return: list of pieces that can move to given destination
- * Args: <in> san_move: the destination
+ * Args:
+ * <in> basis_board: the board state to find the move in 
+ * <in> move: the move struct generated by the SAN parser
  */
 struct piece_list
 find_moving_pieces(struct board * basis_board, struct move move, bool is_white_turn)
@@ -401,7 +384,7 @@ find_moving_pieces(struct board * basis_board, struct move move, bool is_white_t
                     && is_same_square(temp_piece.pos, move.landing_sq))
                 {
                     // copy this piece to result list
-                    piece_list.pieces[piece_list.len++] = temp_piece;
+                    piece_list.pieces[piece_list.len++] = basis_board->pieces[i];
                 }
             }
         }
@@ -600,6 +583,6 @@ main(int argc, char ** argv)
     #if INTERACTIVE == 1
     interactive();
     #endif
-    game_loop(true);
+    //game_loop(true);
     return 0;
 }
