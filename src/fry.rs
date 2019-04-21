@@ -1,50 +1,62 @@
 
+extern crate termcolor;
+
+mod basedefs;
+use basedefs::{Piece, PieceClass, Board, Position};
+
+use std::io;
 use std::io::Write;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 fn main() {
-    print_board();
+    let starter_board = Board::generate_starting_board();
+    print_board(&starter_board);
 }
 
 fn print_board_files() {
     print!("   ");
-    for c in (b'a'..b'i').map(char::from) {
+    for c in (b'a'..=b'h').map(char::from) {
         print!(" {} ", c);
     }
     println!("");
 }
 
-fn print_board() {
+fn print_board(board: &Board) {
+
+    let mut stdout = StandardStream::stdout(ColorChoice::Auto);
     let white_sq = (Some(Color::Black), Some(Color::White));
     let black_sq = (Some(Color::White), Some(Color::Black));
 
-    fn print_sq(stream: &mut StandardStream, 
-                colors: (Option<Color>, Option<Color>),
-                c: char) {
-        stream.set_color(ColorSpec::new().set_fg(colors.0)).expect("");
-        stream.set_color(ColorSpec::new().set_bg(colors.1)).expect("");
-        write!(stream, " {} ", c).expect("");
-        stream.reset().expect("");
-    }
-
-    let mut stdout = StandardStream::stdout(ColorChoice::Auto);
+    let mut print_sq = | colors: (Option<Color>, Option<Color>),
+                         c: char |
+                       -> io::Result<()> {
+        stdout.set_color(ColorSpec::new().set_fg(colors.0))?;
+        stdout.set_color(ColorSpec::new().set_bg(colors.1))?;
+        write!(stdout, " {} ", c)?;
+        stdout.reset()
+    };
 
     print_board_files();
+
     for y in 0..8 {
         for x in -1..9 {
-
+            // print ranks
             if x == -1 || x == 8 {
                 print!(" {} ", (7-y) + 1);
                 continue;
             }
-
-            if (x+y) & 1 == 0 {
-                print_sq(&mut stdout, white_sq, ' ');
-            } else {
-                print_sq(&mut stdout, black_sq, ' ');
-            }
+            // print the squares
+            print_sq(
+                if (x+y) & 1 == 0 {white_sq} else {black_sq},
+                match board.piece_at(&basedefs::Position::new(x, y)) {
+                    Some(piece) => piece.character(),
+                    None => ' '
+                }
+            ).unwrap();
         }
         println!("");
     }
+
     print_board_files();
 }
+
