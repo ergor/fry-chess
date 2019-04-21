@@ -1,15 +1,15 @@
 
 extern crate termcolor;
 
-mod basedefs;
-use basedefs::{Piece, PieceClass, Board, Position};
+mod gameset;
+use gameset::{PieceData, Board, Position};
 
 use std::io;
 use std::io::Write;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 fn main() {
-    let starter_board = Board::generate_starting_board();
+    let starter_board = gameset::generate_starting_board();
     print_board(&starter_board);
 }
 
@@ -48,8 +48,8 @@ fn print_board(board: &Board) {
             // print the squares
             print_sq(
                 if (x+y) & 1 == 0 {white_sq} else {black_sq},
-                match board.piece_at(&basedefs::Position::new(x, y)) {
-                    Some(piece) => piece.character(),
+                match board.piece_at(&gameset::Position::new(x, y)) {
+                    Some(piece) => piece.piece().character(),
                     None => ' '
                 }
             ).unwrap();
