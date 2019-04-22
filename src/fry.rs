@@ -2,7 +2,7 @@
 extern crate termcolor;
 
 mod gameset;
-use gameset::{PieceData, Board, Position};
+use gameset::{Piece, Board, Position};
 
 use std::io;
 use std::io::Write;
@@ -49,7 +49,7 @@ fn print_board(board: &Board) {
             print_sq(
                 if (x+y) & 1 == 0 {white_sq} else {black_sq},
                 match board.piece_at(&gameset::Position::new(x, y)) {
-                    Some(piece) => piece.piece().character(),
+                    Some(piece) => piece.character(),
                     None => ' '
                 }
             ).unwrap();

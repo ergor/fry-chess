@@ -1,6 +1,5 @@
 
-mod pieces;
-use pieces::{pawn::Pawn, rook::Rook};
+mod piece_defs;
 
 use std::vec::Vec;
 
@@ -29,26 +28,15 @@ pub enum Color {
     BLACK
 }
 
-pub trait Piece {
-    /** 
-     * generates all the possible board states as a result
-     * of performing legal moves with this piece 
-     */
-    fn generate(&self, board: &Board) -> Vec<Board>;
-    /**
-     * 
-     */
-    fn piece(&self) -> &PieceData;
-}
-
-pub struct PieceData {
+pub struct Piece {
     color: Color,               // white or black
     position: Position,         // (0,0) top left; (7,7) bottom right
     symbol: char,               // text representation of the piece
     value: i32,                 // the relative value of the piece
+    generator: fn(&Piece, &Board) -> Vec<Board>
 }
 
-impl PieceData {
+impl Piece {
     pub fn character(&self) -> char {
         match self.color {
             Color::BLACK => self.symbol.to_ascii_lowercase(),
@@ -59,18 +47,20 @@ impl PieceData {
     pub fn new(color: Color,
                symbol: char,
                value: i32,
-               position: Position
-        ) -> PieceData {
+               position: Position,
+               generator: fn(&Piece, &Board) -> Vec<Board>
+            ) -> Piece {
         let value = match &color {
             Color::WHITE => value,
             Color::BLACK => -value,
         };
 
-        PieceData {
+        Piece {
             color,
             position,
             symbol,
             value,
+            generator
         }
     }
 }
@@ -78,13 +68,11 @@ impl PieceData {
 pub struct Board {
     sum: i32,               // board evaluation
     checks: (u32, u32),     // checks against white,black king
-    pub pieces: Vec<Box<Piece>>, // the pieces on this board
+    pub pieces: Vec<Piece>, // the pieces on this board
 }
 
-
-
 impl Board {
-    pub fn new(pieces: Vec<Box<Piece>>) -> Board {
+    pub fn new(pieces: Vec<Piece>) -> Board {
         Board {
             sum: 0,
             checks: (0, 0),
@@ -92,9 +80,9 @@ impl Board {
         }
     }
 
-    pub fn piece_at(&self, pos: &Position) -> Option<&Box<Piece>> {
+    pub fn piece_at(&self, pos: &Position) -> Option<&Piece> {
         self.pieces.iter()
-            .find(|&p| p.piece().position.cmp(pos))
+            .find(|&p| p.position.cmp(pos))
     }
 
     pub fn within_bounds(pos: &Position) -> bool {
@@ -108,10 +96,12 @@ pub fn generate_starting_board() -> Board {
 
     // white pieces
     for x in 0..8 {
-        starter_board.pieces.push(Box::new(Pawn::new(Color::WHITE, Position::new(x, 6))));
+        starter_board.pieces.push(piece_defs::new(piece_defs::pawn::def(), Color::WHITE, Position::new(x, 6)));
+        //starter_board.pieces.push(Box::new(Pawn::new(Color::WHITE, Position::new(x, 6))));
     }
 
-    starter_board.pieces.push(Box::new(Rook::new(Color::WHITE, Position::new(0, 7))));
+    starter_board.pieces.push(piece_defs::new(piece_defs::rook::def(), Color::WHITE, Position::new(0, 7)));
+    //starter_board.pieces.push(Box::new(Rook::new(Color::WHITE, Position::new(0, 7))));
     //push(PieceClass::KNIGHT, Position::new(1, 7));
     //push(PieceClass::BISHOP, Position::new(2, 7));
     //push(PieceClass::QUEEN,  Position::new(3, 7));
@@ -122,7 +112,7 @@ pub fn generate_starting_board() -> Board {
 
     // black pieces
     for x in 0..8 {
-        starter_board.pieces.push(Box::new(Pawn::new(Color::BLACK, Position::new(x, 1))));
+        starter_board.pieces.push(piece_defs::new(piece_defs::pawn::def(), Color::BLACK, Position::new(x, 1)));
     }
 
     //push(PieceClass::ROOK,   Position::new(0, 0));
