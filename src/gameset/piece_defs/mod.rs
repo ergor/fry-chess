@@ -20,29 +20,50 @@ pub fn new(def: PieceDef, color: Color, position: Position) -> Piece {
     )
 }
 
+fn add_vect(origin: &Position, vect: (i32, i32)) -> Option<Position> {
+    if let (0, 0) = vect {
+        return None;
+    }
+    let pos = origin.add_vect(vect);
+    if Board::within_bounds(&pos) { 
+        Some(pos) 
+    } else { 
+        None
+    }
+}
+
 pub fn gen_iter(piece: &Piece, board: &Board, vect: (i32, i32)) -> Vec<Board> {
+    println!("gen iter");
     if let (0, 0) = vect {
         return Vec::new();
     }
 
-    let pieces: Vec<&Piece> = board.pieces.iter()
-        .filter(|p| !p.position.cmp(&piece.position))
-        .collect();
-
     // generate all new position based on starting position anv vector
     // as long as new position is within bounds
-    let starting_pos = &piece.position;
-    //let ps = ()
-
-
-    let mut generated = Vec::new();
     
-    let mut new_pos = piece.position.add_vect(vect);
-    //while Board::within_bounds(&new_pos) {
-    //    let new_pieces: Vec<Piece> = pieces.to_owned();
-    //    let new_board = Board::new(new_pieces);
-    //    generated.push(new_board);
-    //}
+    let origin = &piece.position;
+    let mut generated = Vec::new();
+    let mut new_pos = add_vect(origin, vect);
+    
+    loop {
+        match new_pos {
+            Some(pos) => {
+                println!("{:?}", pos);
+                let mut new_piece = piece.clone();
+                let mut new_pieces: Vec<Piece> = board.pieces.iter()
+                    .filter(|p| !p.position.cmp(origin) && !p.position.cmp(&pos))
+                    .cloned().collect();
+
+                new_pos = add_vect(&pos, vect);
+                new_piece.position = pos;
+                new_pieces.push(new_piece);
+
+                let new_board = Board::new(new_pieces);
+                generated.push(new_board);  
+            },
+            None => break
+        }
+    }
 
     generated
 }

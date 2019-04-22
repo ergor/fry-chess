@@ -3,6 +3,7 @@ mod piece_defs;
 
 use std::vec::Vec;
 
+#[derive(Clone, Debug)]
 pub struct Position {
     x: i32,
     y: i32,
@@ -23,11 +24,13 @@ impl Position {
     }
 }
 
+#[derive(Clone)]
 pub enum Color {
     WHITE,
     BLACK
 }
 
+#[derive(Clone)]
 pub struct Piece {
     color: Color,               // white or black
     position: Position,         // (0,0) top left; (7,7) bottom right
@@ -42,6 +45,10 @@ impl Piece {
             Color::BLACK => self.symbol.to_ascii_lowercase(),
             Color::WHITE => self.symbol.to_ascii_uppercase(),
         }
+    }
+
+    pub fn generate(&self, board: &Board) -> Vec<Board> {
+        (self.generator)(self, board)
     }
 
     pub fn new(color: Color,

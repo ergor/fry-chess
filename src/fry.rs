@@ -11,6 +11,16 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 fn main() {
     let starter_board = gameset::generate_starting_board();
     print_board(&starter_board);
+
+    let rook = starter_board.piece_at(&Position::new(0, 7)).unwrap();
+
+    let boards = rook.generate(&starter_board);
+
+    for board in boards {
+        print_board(&board);
+    }
+
+    // IDE: lagre brikkene i en hashmap? key: posisjon. value: brikken.
 }
 
 fn print_board_files() {

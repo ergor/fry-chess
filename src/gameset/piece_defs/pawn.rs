@@ -6,10 +6,10 @@ pub fn def() -> PieceDef {
     PieceDef {
         symbol: 'p',
         value: 100,
-        generator
+        generator: generate
     }
 }
 
-fn generator(piece: &Piece, board: &Board) -> Vec<Board> {
+fn generate(piece: &Piece, board: &Board) -> Vec<Board> {
     Vec::new()
 }
