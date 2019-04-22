@@ -2,8 +2,10 @@
 mod piece_defs;
 
 use std::vec::Vec;
+use std::collections::HashMap;
+use std::hash::Hash;
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Position {
     x: i32,
     y: i32,
@@ -14,7 +16,7 @@ impl Position {
         Position { x, y }
     }
 
-    pub fn cmp(&self, pos2: &Position) -> bool {
+    pub fn cmp(&self, pos2: Position) -> bool {
         self.x == pos2.x && self.y == pos2.y
     }
 
@@ -24,7 +26,7 @@ impl Position {
     }
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum Color {
     WHITE,
     BLACK
@@ -33,7 +35,6 @@ pub enum Color {
 #[derive(Clone)]
 pub struct Piece {
     color: Color,               // white or black
-    position: Position,         // (0,0) top left; (7,7) bottom right
     symbol: char,               // text representation of the piece
     value: i32,                 // the relative value of the piece
     generator: fn(&Piece, &Board) -> Vec<Board>
@@ -54,17 +55,15 @@ impl Piece {
     pub fn new(color: Color,
                symbol: char,
                value: i32,
-               position: Position,
                generator: fn(&Piece, &Board) -> Vec<Board>
             ) -> Piece {
-        let value = match &color {
+        let value = match color {
             Color::WHITE => value,
             Color::BLACK => -value,
         };
 
         Piece {
             color,
-            position,
             symbol,
             value,
             generator
@@ -75,11 +74,11 @@ impl Piece {
 pub struct Board {
     sum: i32,               // board evaluation
     checks: (u32, u32),     // checks against white,black king
-    pub pieces: Vec<Piece>, // the pieces on this board
+    pub pieces: HashMap<Position, Piece>   // (0,0) top left; (7,7) bottom right
 }
 
 impl Board {
-    pub fn new(pieces: Vec<Piece>) -> Board {
+    pub fn new(pieces: HashMap<Position, Piece>) -> Board {
         Board {
             sum: 0,
             checks: (0, 0),
@@ -87,27 +86,28 @@ impl Board {
         }
     }
 
-    pub fn piece_at(&self, pos: &Position) -> Option<&Piece> {
-        self.pieces.iter()
-            .find(|&p| p.position.cmp(pos))
+    pub fn piece_at(&self, pos: Position) -> Option<&Piece> {
+        self.pieces.get(&pos)
     }
 
-    pub fn within_bounds(pos: &Position) -> bool {
+    pub fn within_bounds(pos: Position) -> bool {
         pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8
     }
 }
 
 
 pub fn generate_starting_board() -> Board {
-    let mut starter_board = Board::new(Vec::new());
+    let mut starter_board = Board::new(HashMap::new());
 
     // white pieces
     for x in 0..8 {
-        starter_board.pieces.push(piece_defs::new(piece_defs::pawn::def(), Color::WHITE, Position::new(x, 6)));
+        starter_board.pieces.insert(
+            Position::new(x, 6),
+            piece_defs::new(piece_defs::pawn::def(), Color::WHITE));
         //starter_board.pieces.push(Box::new(Pawn::new(Color::WHITE, Position::new(x, 6))));
     }
 
-    starter_board.pieces.push(piece_defs::new(piece_defs::rook::def(), Color::WHITE, Position::new(0, 7)));
+    starter_board.pieces.insert(Position::new(0, 7), piece_defs::new(piece_defs::rook::def(), Color::WHITE));
     //starter_board.pieces.push(Box::new(Rook::new(Color::WHITE, Position::new(0, 7))));
     //push(PieceClass::KNIGHT, Position::new(1, 7));
     //push(PieceClass::BISHOP, Position::new(2, 7));
@@ -119,7 +119,9 @@ pub fn generate_starting_board() -> Board {
 
     // black pieces
     for x in 0..8 {
-        starter_board.pieces.push(piece_defs::new(piece_defs::pawn::def(), Color::BLACK, Position::new(x, 1)));
+        starter_board.pieces.insert(
+            Position::new(x, 1),
+            piece_defs::new(piece_defs::pawn::def(), Color::BLACK));
     }
 
     //push(PieceClass::ROOK,   Position::new(0, 0));

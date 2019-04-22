@@ -3,6 +3,7 @@ pub mod pawn;
 pub mod rook;
 
 use super::{Piece, Board, Position, Color};
+use std::collections::HashMap;
 
 pub struct PieceDef {
     symbol: char,
@@ -10,29 +11,28 @@ pub struct PieceDef {
     generator: fn(&Piece, &Board) -> Vec<Board>
 }
 
-pub fn new(def: PieceDef, color: Color, position: Position) -> Piece {
+pub fn new(def: PieceDef, color: Color) -> Piece {
     Piece::new(
         color,
         def.symbol,
         def.value,
-        position,
         def.generator
     )
 }
 
-fn add_vect(origin: &Position, vect: (i32, i32)) -> Option<Position> {
+fn add_vect(origin: Position, vect: (i32, i32)) -> Option<Position> {
     if let (0, 0) = vect {
         return None;
     }
     let pos = origin.add_vect(vect);
-    if Board::within_bounds(&pos) { 
+    if Board::within_bounds(pos) { 
         Some(pos) 
     } else { 
         None
     }
 }
 
-pub fn gen_iter(piece: &Piece, board: &Board, vect: (i32, i32)) -> Vec<Board> {
+pub fn gen_iter(origin: Position, board: &Board, vect: (i32, i32)) -> Vec<Board> {
     println!("gen iter");
     if let (0, 0) = vect {
         return Vec::new();
@@ -41,7 +41,6 @@ pub fn gen_iter(piece: &Piece, board: &Board, vect: (i32, i32)) -> Vec<Board> {
     // generate all new position based on starting position anv vector
     // as long as new position is within bounds
     
-    let origin = &piece.position;
     let mut generated = Vec::new();
     let mut new_pos = add_vect(origin, vect);
     
@@ -49,17 +48,19 @@ pub fn gen_iter(piece: &Piece, board: &Board, vect: (i32, i32)) -> Vec<Board> {
         match new_pos {
             Some(pos) => {
                 println!("{:?}", pos);
-                let mut new_piece = piece.clone();
-                let mut new_pieces: Vec<Piece> = board.pieces.iter()
-                    .filter(|p| !p.position.cmp(origin) && !p.position.cmp(&pos))
-                    .cloned().collect();
+                let mut new_piece: Piece = board.piece_at(origin).unwrap().clone();
+                let mut new_pieces = HashMap::new();
+                for (k, v) in board.pieces {
+                    if !k.cmp(origin) && !k.cmp(pos) {
+                        new_pieces.insert(k, v);
+                    }
+                }
 
-                new_pos = add_vect(&pos, vect);
-                new_piece.position = pos;
-                new_pieces.push(new_piece);
+                new_pieces.insert(pos, new_piece);
 
                 let new_board = Board::new(new_pieces);
-                generated.push(new_board);  
+                generated.push(new_board);
+                new_pos = add_vect(pos, vect);
             },
             None => break
         }

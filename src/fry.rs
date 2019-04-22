@@ -12,7 +12,7 @@ fn main() {
     let starter_board = gameset::generate_starting_board();
     print_board(&starter_board);
 
-    let rook = starter_board.piece_at(&Position::new(0, 7)).unwrap();
+    let rook = starter_board.piece_at(Position::new(0, 7)).unwrap();
 
     let boards = rook.generate(&starter_board);
 
@@ -58,7 +58,7 @@ fn print_board(board: &Board) {
             // print the squares
             print_sq(
                 if (x+y) & 1 == 0 {white_sq} else {black_sq},
-                match board.piece_at(&gameset::Position::new(x, y)) {
+                match board.piece_at(gameset::Position::new(x, y)) {
                     Some(piece) => piece.character(),
                     None => ' '
                 }
