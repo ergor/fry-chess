@@ -12,9 +12,11 @@ fn main() {
     let starter_board = gameset::generate_starting_board();
     print_board(&starter_board);
 
-    let rook = starter_board.piece_at(Position::new(0, 7)).unwrap();
+    let rook_pos = Position::new(0, 7);
+    let rook = starter_board.piece_at(rook_pos)
+        .unwrap();
 
-    let boards = rook.generate(&starter_board);
+    let boards = (rook.generator)(rook_pos, &starter_board);
 
     for board in boards {
         print_board(&board);
@@ -34,14 +36,14 @@ fn print_board_files() {
 fn print_board(board: &Board) {
 
     let mut stdout = StandardStream::stdout(ColorChoice::Auto);
+
     let white_sq = (Some(Color::Black), Some(Color::White));
     let black_sq = (Some(Color::White), Some(Color::Black));
 
     let mut print_sq = | colors: (Option<Color>, Option<Color>),
                          c: char |
                        -> io::Result<()> {
-        stdout.set_color(ColorSpec::new().set_fg(colors.0))?;
-        stdout.set_color(ColorSpec::new().set_bg(colors.1))?;
+        stdout.set_color(ColorSpec::new().set_fg(colors.0).set_bg(colors.1))?;
         write!(stdout, " {} ", c)?;
         stdout.reset()
     };

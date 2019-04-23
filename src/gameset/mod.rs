@@ -3,7 +3,6 @@ mod piece_defs;
 
 use std::vec::Vec;
 use std::collections::HashMap;
-use std::hash::Hash;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Position {
@@ -26,7 +25,7 @@ impl Position {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Color {
     WHITE,
     BLACK
@@ -37,7 +36,7 @@ pub struct Piece {
     color: Color,               // white or black
     symbol: char,               // text representation of the piece
     value: i32,                 // the relative value of the piece
-    generator: fn(&Piece, &Board) -> Vec<Board>
+    pub generator: fn(Position, &Board) -> Vec<Board>
 }
 
 impl Piece {
@@ -48,14 +47,14 @@ impl Piece {
         }
     }
 
-    pub fn generate(&self, board: &Board) -> Vec<Board> {
-        (self.generator)(self, board)
+    pub fn is_enemy(&self, my_color: Color) -> bool {
+        self.color != my_color
     }
 
     pub fn new(color: Color,
                symbol: char,
                value: i32,
-               generator: fn(&Piece, &Board) -> Vec<Board>
+               generator: fn(Position, &Board) -> Vec<Board>
             ) -> Piece {
         let value = match color {
             Color::WHITE => value,
@@ -100,7 +99,7 @@ pub fn generate_starting_board() -> Board {
     let mut starter_board = Board::new(HashMap::new());
 
     // white pieces
-    for x in 0..8 {
+    for x in 1..8 {
         starter_board.pieces.insert(
             Position::new(x, 6),
             piece_defs::new(piece_defs::pawn::def(), Color::WHITE));

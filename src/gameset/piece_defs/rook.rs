@@ -1,6 +1,6 @@
 
 use super::PieceDef;
-use super::super::{Piece, Board};
+use super::super::{Piece, Board, Position};
 
 pub fn def() -> PieceDef {
     PieceDef {
@@ -10,6 +10,6 @@ pub fn def() -> PieceDef {
     }
 }
 
-fn generate(piece: &Piece, board: &Board) -> Vec<Board> {
-    super::gen_iter(piece, board, (1, 0))
+fn generate(origin: Position, board: &Board) -> Vec<Board> {
+    super::gen_iter(origin, board, vec![(1, 0), (-1, 0), (0, 1), (0, -1)])
 }
