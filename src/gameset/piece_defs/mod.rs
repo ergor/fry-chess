@@ -2,7 +2,7 @@
 pub mod pawn;
 pub mod rook;
 
-use super::{Piece, Board, Position, Color};
+use super::{Piece, Board, Position, Color, Vector2D};
 use std::collections::HashMap;
 
 pub struct PieceDef {
@@ -12,12 +12,16 @@ pub struct PieceDef {
 }
 
 pub fn new(def: PieceDef, color: Color) -> Piece {
-    Piece::new(
-        color,
-        def.symbol,
-        def.value,
-        def.generator
-    )
+    Piece::new(color, def.symbol, def.value, def.generator)
+}
+
+fn as_vect(pos: Position) -> Vector2D {
+    if pos >= super::BOARD_SZ {
+        panic!("position oob");
+    }
+    let x = (pos % 8) as i32;
+    let y = (pos / 8) as i32;
+    (x, y)
 }
 
 /**
@@ -29,12 +33,15 @@ pub fn new(def: PieceDef, color: Color) -> Piece {
  * * `vect` - the vector to move the piece along
  * * `condition` - closure that must return whether the landing square is legal.
  */
-fn apply_vector(origin: Position, vect: (i32, i32), condition: &Fn(Position) -> bool) -> Option<Position> {
+fn apply_vector(origin: Position, vect: Vector2D, condition: &Fn(Position) -> bool) -> Option<Position> {
     if let (0, 0) = vect {
         return None;
     }
 
-    let landing_sq = origin.add_vect(vect);
+    let (dx, dy) = vect;
+    let x = (origin % 8) as i32 + dx;
+    let y = (origin / 8) as i32 + dy;
+    let landing_sq = Board::position((x , y));
 
     if Board::within_bounds(landing_sq) && condition(landing_sq) {
         Some(landing_sq)
@@ -54,7 +61,7 @@ fn apply_vector(origin: Position, vect: (i32, i32), condition: &Fn(Position) -> 
  * * `basis_board` - the board on which the piece stands
  * * `vects` - the movement vectors
  */
-pub fn gen_iter(origin: Position, basis_board: &Board, vects: Vec<(i32, i32)>) -> Vec<Board> {
+/*pub fn gen_iter(origin: Position, basis_board: &Board, vects: Vec<(i32, i32)>) -> Vec<Board> {
 
     let moving_piece: &Piece = basis_board.piece_at(origin)
         .unwrap();
@@ -103,6 +110,32 @@ pub fn gen_iter(origin: Position, basis_board: &Board, vects: Vec<(i32, i32)>) -
     }
 
     generated_boards
+}*/
+
+fn add_vectors(vect1: Vector2D, vect2: Vector2D) -> Vector2D {
+    (vect1.0 + vect2.0, vect1.1 + vect2.1)
+}
+
+pub fn gen_iter<'a>(origin: Position, directions: Vec<Vector2D>, 
+                    condition: &'a Fn(Position) -> bool)
+                    -> Vec<((i32, i32), &'a Fn(Position) -> bool)> {
+
+    let mut moves = Vec::new();
+    let origin = as_vect(origin);
+
+    for direction in directions {
+        if let (0, 0) = direction {
+            continue;
+        }
+        //let mut opt_landing_sq = apply_vector(origin, direction, condition);
+        let mut vect = direction;
+        while Board::within_bounds(Board::position(add_vectors(vect, origin))) {
+            println!("gen_iter: {:?} -> {:?}", vect, add_vectors(vect, origin));
+            moves.push((vect, condition));
+            vect = add_vectors(vect, direction);
+        }
+    }
+    moves
 }
 
 // idea:
@@ -110,35 +143,40 @@ pub fn gen_iter(origin: Position, basis_board: &Board, vects: Vec<(i32, i32)>) -
 // one function which generates legal, fixed, movement vectors iteratively from direction vectors.
 // then calls the fixed vector function to apply them all. (rooks, bishops, etc)
 
-pub fn gen_fixed(origin: Position, basis_board: &Board, vects: Vec<(i32, i32)>, condition: &Fn(Position) -> bool) -> Vec<Board> {
+pub fn gen_fixed(origin: Position, basis_board: &Board, 
+                 moves: Vec<((i32, i32), &Fn(Position) -> bool)>
+                ) -> Vec<Board> {
     let mut generated_boards = Vec::new();
 
-    for vect in vects {
+    for (vect, condition) in moves {
         if let (0, 0) = vect {
+            println!("{:?}", vect);
             continue;
         }
 
-        let mut opt_landing_sq = apply_vector(origin, vect, condition);
+        println!("{:?}", vect);
+        let opt_landing_sq = apply_vector(origin, vect, condition);
 
         match opt_landing_sq {
             None => continue,
             Some(landing_sq) => {
-                println!("{:?}", landing_sq);
+                println!("{:?}", as_vect(landing_sq));
 
                 let moving_piece: Piece = basis_board.piece_at(origin)
                     .unwrap()
                     .clone();
 
-                let mut pieces: HashMap<Position, Piece> = HashMap::new();
-                for (pos, piece) in &basis_board.pieces {
-                    if !pos.cmp(origin) { // dont clone the moving piece yet
-                        pieces.insert(*pos, piece.clone());
+                //let mut pieces: HashMap<Position, Piece> = HashMap::new();
+                let mut board = Board::new();
+                for (pos, piece) in basis_board {
+                    if pos != origin { // dont clone the moving piece yet
+                        board.insert(pos, piece.clone());
                     }
                 }
 
-                pieces.insert(landing_sq, moving_piece);
+                board.insert(landing_sq, moving_piece);
 
-                generated_boards.push(Board::new(pieces));
+                generated_boards.push(board);
             }
         }
     }

@@ -2,28 +2,11 @@
 mod piece_defs;
 
 use std::vec::Vec;
-use std::collections::HashMap;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub struct Position {
-    x: i32,
-    y: i32,
-}
-
-impl Position {
-    pub fn new(x: i32, y: i32) -> Position {
-        Position { x, y }
-    }
-
-    pub fn cmp(&self, pos2: Position) -> bool {
-        self.x == pos2.x && self.y == pos2.y
-    }
-
-    pub fn add_vect(&self, vect: (i32, i32)) -> Position {
-        let (dx, dy) = vect;
-        Position::new(self.x + dx, self.y + dy)
-    }
-}
+pub const BOARD_SZ: usize = 64;
+pub type Squares = [Option<Piece>; BOARD_SZ];
+pub type Vector2D = (i32, i32);
+pub type Position = usize;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Color {
@@ -31,7 +14,7 @@ pub enum Color {
     BLACK
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct Piece {
     color: Color,               // white or black
     symbol: char,               // text representation of the piece
@@ -40,6 +23,16 @@ pub struct Piece {
 }
 
 impl Piece {
+    pub fn new(color: Color, symbol: char, value: i32,
+               generator: fn(Position, &Board) -> Vec<Board>) -> Piece {
+        let value = match color {
+            Color::WHITE => value,
+            Color::BLACK => -value,
+        };
+
+        Piece { color, symbol, value, generator }
+    }
+
     pub fn character(&self) -> char {
         match self.color {
             Color::BLACK => self.symbol.to_ascii_lowercase(),
@@ -50,63 +43,97 @@ impl Piece {
     pub fn is_enemy(&self, my_color: Color) -> bool {
         self.color != my_color
     }
-
-    pub fn new(color: Color,
-               symbol: char,
-               value: i32,
-               generator: fn(Position, &Board) -> Vec<Board>
-            ) -> Piece {
-        let value = match color {
-            Color::WHITE => value,
-            Color::BLACK => -value,
-        };
-
-        Piece {
-            color,
-            symbol,
-            value,
-            generator
-        }
-    }
 }
 
 pub struct Board {
     sum: i32,               // board evaluation
     checks: (u32, u32),     // checks against white,black king
-    pub pieces: HashMap<Position, Piece>   // (0,0) top left; (7,7) bottom right
+    pub squares: Squares    // (0,0) top left; (7,7) bottom right
 }
 
 impl Board {
-    pub fn new(pieces: HashMap<Position, Piece>) -> Board {
+    pub fn new() -> Board {
         Board {
             sum: 0,
             checks: (0, 0),
-            pieces
+            squares: [None; BOARD_SZ]
         }
     }
 
-    pub fn piece_at(&self, pos: Position) -> Option<&Piece> {
-        self.pieces.get(&pos)
+    pub fn position(pos: Vector2D) -> Position {
+        let (x, y) = pos;
+        if x < 0 || y < 0 {
+            panic!("components less than 0");
+        }
+        ((y << 3) + x) as Position
     }
 
     pub fn within_bounds(pos: Position) -> bool {
-        pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8
+        pos < BOARD_SZ
+    }
+
+    pub fn insert(&mut self, pos: Position, piece: Piece) {
+        self.squares[pos] = Some(piece);
+    }
+
+    pub fn piece_at(&self, pos: Position) -> Option<&Piece> {
+        match &self.squares[pos] {
+            Some(p) => Some(p),
+            None => None
+        }
+    }
+}
+
+pub struct BoardIterator<'a> {
+    squares: &'a Squares,
+    index: Position
+}
+
+impl<'a> IntoIterator for &'a Board {
+    type Item = (Position, &'a Piece);
+    type IntoIter = BoardIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BoardIterator {
+            squares: &self.squares,
+            index: 0
+        }
+    }
+}
+
+impl<'a> Iterator for BoardIterator<'a> {
+    type Item = (Position, &'a Piece);
+
+    fn next(&mut self) -> Option<(Position, &'a Piece)> {
+        loop {
+            let i = self.index;
+            match &self.squares[i] {
+                None => {
+                    if i < BOARD_SZ {
+                        self.index += 1;
+                    } else {
+                        return None;
+                    }
+                },
+                Some(piece) => return Some((i, piece))
+            }
+        }
     }
 }
 
 
 pub fn generate_starting_board() -> Board {
-    let mut starter_board = Board::new(HashMap::new());
+    let mut starter_board = Board::new();
 
     // white pieces
     for x in 1..8 {
-        starter_board.pieces.insert(
-            Position::new(x, 6),
+        starter_board.insert(
+            Board::position((x, 6)),
             piece_defs::new(piece_defs::pawn::def(), Color::WHITE));
         //starter_board.pieces.push(Box::new(Pawn::new(Color::WHITE, Position::new(x, 6))));
     }
 
-    starter_board.pieces.insert(Position::new(0, 7), piece_defs::new(piece_defs::rook::def(), Color::WHITE));
+    starter_board.insert(Board::position((0, 7)), piece_defs::new(piece_defs::rook::def(), Color::WHITE));
     //starter_board.pieces.push(Box::new(Rook::new(Color::WHITE, Position::new(0, 7))));
     //push(PieceClass::KNIGHT, Position::new(1, 7));
     //push(PieceClass::BISHOP, Position::new(2, 7));
@@ -118,8 +145,8 @@ pub fn generate_starting_board() -> Board {
 
     // black pieces
     for x in 0..8 {
-        starter_board.pieces.insert(
-            Position::new(x, 1),
+        starter_board.insert(
+            Board::position((x, 1)),
             piece_defs::new(piece_defs::pawn::def(), Color::BLACK));
     }
 

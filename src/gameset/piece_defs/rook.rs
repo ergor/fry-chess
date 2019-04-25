@@ -11,5 +11,17 @@ pub fn def() -> PieceDef {
 }
 
 fn generate(origin: Position, board: &Board) -> Vec<Board> {
-    super::gen_iter(origin, board, vec![(1, 0), (-1, 0), (0, 1), (0, -1)])
+
+    let moving_piece: &Piece = board.piece_at(origin)
+        .unwrap();
+
+    let condition = |landing_sq: Position| { 
+        let opt_piece = board.piece_at(landing_sq);
+        match opt_piece {
+            None => true,
+            Some(piece) => piece.is_enemy(moving_piece.color)
+        }
+    };
+    let moves = super::gen_iter(origin, vec![(1, 0), (-1, 0), (0, 1), (0, -1)], &condition);
+    super::gen_fixed(origin, board, moves)
 }
