@@ -104,6 +104,7 @@ impl<'a> IntoIterator for &'a Board {
 impl<'a> Iterator for BoardIterator<'a> {
     type Item = (Position, &'a Piece);
 
+    // FIXME: infinite loop ahead
     fn next(&mut self) -> Option<(Position, &'a Piece)> {
         loop {
             let i = self.index;
