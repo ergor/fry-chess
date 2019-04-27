@@ -7,13 +7,13 @@ use super::*;
 pub struct PieceDef {
     symbol: char,
     value: i32,
-    vector_iterator: fn(&BoardGenerator) -> Option<Vector>
+    vector_iterator: fn(&mut BoardGenerator) -> Option<Vector>
 }
 
-pub fn from_def<'a>(def: PieceDef, board: &'a Board<'a>, 
-                    color: Color, position: Position) -> Piece<'a> {
+pub fn from_def(def: PieceDef, board: &Board, 
+                    color: Color, position: Position) -> Piece {
     Piece::new(color, def.symbol, def.value,
-                board, position, def.vector_iterator)
+                position, def.vector_iterator)
 }
 
 /*

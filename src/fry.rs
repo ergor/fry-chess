@@ -18,9 +18,10 @@ fn main() {
 
     print_board(&starter_board);
 
-    for piece in starter_board.into_iter() {
-        for possible_boards in piece.into_iter() {
-
+    for piece in starter_board.pieces() {
+        for possible_board in piece.generator(&starter_board) {
+            println!("generation for piece done:");
+            print_board(&possible_board);
         }
     }
 
@@ -35,7 +36,7 @@ fn print_board_files() {
     println!("");
 }
 
-fn print_board<'a>(board: &Board<'a>) {
+fn print_board(board: &Board) {
 
     let mut stdout = StandardStream::stdout(ColorChoice::Auto);
 

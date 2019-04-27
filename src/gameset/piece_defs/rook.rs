@@ -2,6 +2,14 @@
 use super::PieceDef;
 use super::super::{Board, Piece, Vector, BoardGenerator, GeneratorState};
 
+const DIRS_SZ: usize = 4;
+const DIRECTIONS: [Vector; DIRS_SZ] = [
+    Vector {x: 1, y: 0},
+    Vector {x:-1, y: 0},
+    Vector {x: 0, y: 1},
+    Vector {x: 0, y:-1},
+];
+
 pub fn def() -> PieceDef {
     PieceDef {
         symbol: 'r',
@@ -28,38 +36,38 @@ fn generate(origin: Position, board: &Board) -> Board {
 }
 */
 
-const DIRS_SZ: usize = 4;
-const directions: [Vector; DIRS_SZ] = [
-    Vector {x: 1, y: 0},
-    Vector {x:-1, y: 0},
-    Vector {x: 0, y: 1},
-    Vector {x: 0, y:-1},
-];
+fn vector_iterator(iterator: &mut BoardGenerator) -> Option<Vector> {
 
-fn vector_iterator(iterator: &BoardGenerator) -> Option<Vector> {
-    fn is_legal(piece: &Piece, vect: Vector) -> bool {
-        Board::within_bounds(piece.position.add_vector(vect))
+    fn is_legal(board: &Board, piece: &Piece, vect: Vector) -> bool {
+        println!("trying {:?} + {:?}", piece.position, vect);
+        let landing_sq = piece.position + vect;
+        Board::within_bounds(landing_sq) 
+            && match board.piece_at(landing_sq) {
+                None => true,
+                Some(other_piece) => piece.is_enemy(other_piece.color),
+            }
     }
 
+    let board = iterator.basis_board;
     let piece = iterator.piece;
-    let delta_vect = match iterator.state {
-
+    match iterator.state {
         GeneratorState::Next(i) => {
             if i == DIRS_SZ {
                 return None;
             }
-            let vect = directions[i];
-            iterator.state = GeneratorState::Next(i + 1);
-            if is_legal(piece, vect) {
+            let vect = DIRECTIONS[i];
+            if is_legal(board, piece, vect) {
+                iterator.state = GeneratorState::Continue(i, vect);
                 return Some(vect)
             } else {
+                iterator.state = GeneratorState::Next(i + 1);
                 return vector_iterator(iterator);
             }
         },
 
         GeneratorState::Continue(i, acc) => {
-            let vect = acc.add(directions[i]);
-            if is_legal(piece, vect) {
+            let vect = acc.add(DIRECTIONS[i]);
+            if is_legal(board, piece, vect) {
                 iterator.state = GeneratorState::Continue(i, vect);
                 return Some(vect)
             } else {

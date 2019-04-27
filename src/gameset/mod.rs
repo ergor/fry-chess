@@ -1,13 +1,13 @@
 
 pub mod piece_defs;
 
-use std::vec::Vec;
+use std::ops;
 
 pub const BOARD_SZ: usize = 64;
 pub const SIDE_LEN: usize = 8;
-pub type Squares<'a> = [[Option<Piece<'a>>; SIDE_LEN]; SIDE_LEN]; // [y][x]?
+pub type Squares = [[Option<Piece>; SIDE_LEN]; SIDE_LEN]; // [y][x]?
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Vector {
     x: i32,
     y: i32,
@@ -21,15 +21,26 @@ impl Vector {
         }
     }
 
-    pub fn add_position(&self, position: Position) -> Vector {
+    //pub fn add_position(vector: Vector, position: Position) -> Vector {
+    //    Vector {
+    //        x: vector.x + position.x as i32,
+    //        y: vector.y + position.y as i32,
+    //    }
+    //}
+}
+
+impl ops::Neg for Vector {
+    type Output = Vector;
+
+    fn neg(self) -> Vector {
         Vector {
-            x: self.x + position.x as i32,
-            y: self.y + position.y as i32,
+            x: -self.x,
+            y: -self.y,
         }
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Position {
     x: usize,
     y: usize,
@@ -40,11 +51,27 @@ impl Position {
         Position {x, y}
     }
 
-    pub fn add_vector(&self, vector: Vector) -> Position {
+    pub fn add_vector(position: Position, vector: Vector) -> Position {
+        let x = position.x as i32 + vector.x;
+        let y = position.y as i32 + vector.y;
         Position {
-            x: self.x + vector.x as usize,
-            y: self.y + vector.y as usize,
+            x: x as usize,
+            y: y as usize,
         }
+    }
+}
+
+impl ops::Add<Vector> for Position {
+    type Output = Position;
+
+    fn add(self, rhs: Vector) -> Position {
+        Position::add_vector(self, rhs)
+    }
+}
+
+impl ops::AddAssign<Vector> for Position {
+    fn add_assign(&mut self, rhs: Vector) {
+        *self = Position::add_vector(*self, rhs);
     }
 }
 
@@ -55,26 +82,24 @@ pub enum Color {
 }
 
 #[derive(Copy, Clone)]
-pub struct Piece<'a> {
+pub struct Piece {
     color: Color,               // white or black
     symbol: char,               // text representation of the piece
     value: i32,                 // the relative value of the piece
-    board: &'a Board<'a>,       // the board this piece is on
     pub position: Position,         // its position on the board
-    vector_iterator: fn(&BoardGenerator) -> Option<Vector>
+    vector_iterator: fn(&mut BoardGenerator) -> Option<Vector>
 }
 
-impl<'a> Piece<'a> {
-    pub fn new(color: Color, symbol: char, value: i32,
-               board: &'a Board, position: Position,
-               vector_iterator: fn(&BoardGenerator) -> Option<Vector>)
-               -> Piece<'a> {
+impl Piece {
+    pub fn new(color: Color, symbol: char, value: i32, position: Position,
+               vector_iterator: fn(&mut BoardGenerator) -> Option<Vector>)
+               -> Piece {
         let value = match color {
             Color::WHITE => value,
             Color::BLACK => -value,
         };
 
-        Piece { color, symbol, value, board, position, vector_iterator }
+        Piece { color, symbol, value, position, vector_iterator }
     }
 
     pub fn character(&self) -> char {
@@ -88,8 +113,17 @@ impl<'a> Piece<'a> {
         self.color != my_color
     }
 
-    pub fn apply_move(&self, vector: Vector) {
-        self.position = self.position.add_vector(vector);
+    // FIXME: this must be done at board level
+    pub fn apply_move(&mut self, vector: Vector) {
+        //self.position = self.position.add_vector(vector);
+    }
+
+    pub fn generator<'a>(&'a self, basis_board: &'a Board) -> BoardGenerator<'a> {
+        BoardGenerator {
+            piece: self,
+            basis_board,
+            state: GeneratorState::Next(0),
+        }
     }
 }
 
@@ -103,44 +137,30 @@ enum GeneratorState {
     Continue(usize, Vector),
 }
 
-struct BoardGenerator<'a> {
-    piece: &'a Piece<'a>,
+pub struct BoardGenerator<'a> {
+    piece: &'a Piece,
+    basis_board: &'a Board,
     state: GeneratorState,
 }
 
-impl<'a> IntoIterator for &'a Piece<'a> {
-    type Item = Board<'a>;
-    type IntoIter = BoardGenerator<'a>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        BoardGenerator {
-            piece: &self,
-            state: GeneratorState::Next(0),
-        }
-    }
-}
-
 impl<'a> Iterator for BoardGenerator<'a> {
-    type Item = Board<'a>;
+    type Item = Board;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let basis_board = self.piece.board;
-        let delta_vect = (self.piece.vector_iterator)(&self);
-        // if next_index is Some index, check if condition is met
-        // to legally generate board. if illegal, try again as long
-        // as next_index is not None
-        match delta_vect {
+        match (self.piece.vector_iterator)(self) {
             None => None,
             Some(vect) => {
-                let board = Board::new();
-                for piece in basis_board {
+                let mut board = Board::new();
+                for piece in self.basis_board.pieces() {
                     if piece as *const _ == self.piece as *const _ {
+                        //println!("\tskipped");
                         continue;
                     }
                     board.insert(piece.clone());
+                    //println!("\tcopied");
                 }
-                let piece = self.piece.clone();
-                piece.position.add_vector(vect);
+                let mut piece = self.piece.clone();
+                piece.position += vect;
 
                 board.insert(piece);
                 Some(board)
@@ -149,14 +169,14 @@ impl<'a> Iterator for BoardGenerator<'a> {
     }
 }
 
-pub struct Board<'a> {
+pub struct Board {
     sum: i32,                   // board evaluation
     checks: (u32, u32),         // checks against white,black king
-    pub squares: Squares<'a>    // (0,0) top left; (7,7) bottom right
+    pub squares: Squares    // (0,0) top left; (7,7) bottom right
 }
 
-impl<'a> Board<'a> {
-    pub fn new() -> Board<'a> {
+impl Board{
+    pub fn new() -> Board {
         Board {
             sum: 0,
             checks: (0, 0),
@@ -165,10 +185,10 @@ impl<'a> Board<'a> {
     }
 
     pub fn within_bounds(pos: Position) -> bool {
-        pos.x >= 0 && pos.x < SIDE_LEN && pos.y >= 0 && pos.y < SIDE_LEN
+        pos.x < SIDE_LEN && pos.y < SIDE_LEN
     }
 
-    pub fn insert(&'a mut self, piece: Piece<'a>) {
+    pub fn insert(&mut self, piece: Piece) {
         let pos = piece.position;
         self.squares[pos.y][pos.x] = Some(piece);
     }
@@ -176,37 +196,34 @@ impl<'a> Board<'a> {
     pub fn piece_at(&self, pos: Position) -> Option<&Piece> {
         self.squares[pos.y][pos.x].as_ref()
     }
-}
 
-pub struct PieceIterator<'a> {
-    squares: &'a Squares<'a>,
-    pos: Position
-}
-
-impl<'a> IntoIterator for &'a Board<'a> {
-    type Item = &'a Piece<'a>;
-    type IntoIter = PieceIterator<'a>;
-
-    fn into_iter(self) -> Self::IntoIter {
+    pub fn pieces<'a>(&'a self) -> PieceIterator<'a> {
         PieceIterator {
             squares: &self.squares,
-            pos: Position {x: 0, y: 0},
+            index: 0,
         }
     }
 }
 
+pub struct PieceIterator<'a> {
+    squares: &'a Squares,
+    index: usize
+}
+
 impl<'a> Iterator for PieceIterator<'a> {
-    type Item = &'a Piece<'a>;
+    type Item = &'a Piece;
 
     fn next(&mut self) -> Option<Self::Item> {
-        for y in self.pos.y .. SIDE_LEN {
-            for x in self.pos.x .. SIDE_LEN {
-                match &self.squares[y][x] {
-                    None => continue,
-                    Some(piece) => {
-                        self.pos = Position {x, y};
-                        return Some(piece);
-                    }
+        while self.index < BOARD_SZ {
+            let x = self.index & 7;     // n % 2^i = n & (2^i - 1)
+            let y = self.index >> 3;    // n / 2^i = n >> i
+            self.index += 1;
+            //println!("probing: x {}, y {}", x, y);
+            match &self.squares[y][x] {
+                None => continue,
+                Some(piece) => {
+                    //println!("\tfound");
+                    return Some(piece);
                 }
             }
         }
@@ -215,7 +232,7 @@ impl<'a> Iterator for PieceIterator<'a> {
 }
 
 
-pub fn generate_starting_board<'a>() -> Board<'a> {
+pub fn generate_starting_board() -> Board {
     let mut starter_board = Board::new();
 
     // white pieces
