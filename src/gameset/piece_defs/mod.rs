@@ -2,28 +2,21 @@
 pub mod pawn;
 pub mod rook;
 
-use super::{Piece, Board, Position, Color, Vector2D};
+use super::*;
 
 pub struct PieceDef {
     symbol: char,
     value: i32,
-    generator: fn(Position, &Board) -> Board
+    vector_iterator: fn(&BoardGenerator) -> Option<Vector>
 }
 
-pub fn new(def: PieceDef, color: Color) -> Piece {
-    Piece::new(color, def.symbol, def.value, def.generator)
+pub fn from_def<'a>(def: PieceDef, board: &'a Board<'a>, 
+                    color: Color, position: Position) -> Piece<'a> {
+    Piece::new(color, def.symbol, def.value,
+                board, position, def.vector_iterator)
 }
 
-fn as_vect(pos: Position) -> Vector2D {
-    if pos >= super::BOARD_SZ {
-        panic!("position oob");
-    }
-    let x = (pos % 8) as i32;
-    let y = (pos / 8) as i32;
-    (x, y)
-}
-
-/**
+/*
  * Returns the landing square if the position is reachable,
  * or None if unreachable or movement vector i null vector.
  * 
@@ -32,6 +25,7 @@ fn as_vect(pos: Position) -> Vector2D {
  * * `vect` - the vector to move the piece along
  * * `condition` - closure that must return whether the landing square is legal.
  */
+/*
 fn apply_vector(origin: Position, vect: Vector2D, condition: &Fn(Position) -> bool) -> Option<Position> {
     if let (0, 0) = vect {
         return None;
@@ -48,8 +42,8 @@ fn apply_vector(origin: Position, vect: Vector2D, condition: &Fn(Position) -> bo
         None
     }
 }
-
-/**
+*/
+/*
  * Generate boards by repeatedly adding a movement vector to the position
  * of the piece we're moving, until it cannot be legally moved anymore.
  * Generation starts from the piece's origin position.
@@ -111,10 +105,7 @@ fn apply_vector(origin: Position, vect: Vector2D, condition: &Fn(Position) -> bo
     generated_boards
 }*/
 
-fn add_vectors(vect1: Vector2D, vect2: Vector2D) -> Vector2D {
-    (vect1.0 + vect2.0, vect1.1 + vect2.1)
-}
-
+/*
 pub fn gen_iter<'a>(origin: Position, directions: Vec<Vector2D>, 
                     condition: &'a Fn(Position) -> bool)
                     -> Vec<((i32, i32), &'a Fn(Position) -> bool)> {
@@ -136,12 +127,12 @@ pub fn gen_iter<'a>(origin: Position, directions: Vec<Vector2D>,
     }
     moves
 }
-
+*/
 // idea:
 // one function which just applies every vector as is. this is the fixed one (knights, pawns, etc)
 // one function which generates legal, fixed, movement vectors iteratively from direction vectors.
 // then calls the fixed vector function to apply them all. (rooks, bishops, etc)
-
+/*
 pub fn gen_fixed(origin: Position, basis_board: &Board, 
                  moves: Vec<((i32, i32), &Fn(Position) -> bool)>
                 ) -> Vec<Board> {
@@ -182,3 +173,4 @@ pub fn gen_fixed(origin: Position, basis_board: &Board,
 
     generated_boards
 }
+*/

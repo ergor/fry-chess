@@ -1,15 +1,15 @@
 
 use super::PieceDef;
-use super::super::{Piece, Board, Position};
+use super::super::{Vector, BoardGenerator};
 
 pub fn def() -> PieceDef {
     PieceDef {
         symbol: 'p',
         value: 100,
-        generator: generate
+        vector_iterator,
     }
 }
 
-fn generate(origin: Position, board: &Board) -> Vec<Board> {
-    Vec::new()
+fn vector_iterator(iterator: &BoardGenerator) -> Option<Vector> {
+    None
 }
