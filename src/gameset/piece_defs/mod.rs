@@ -3,12 +3,11 @@ pub mod pawn;
 pub mod rook;
 
 use super::{Piece, Board, Position, Color, Vector2D};
-use std::collections::HashMap;
 
 pub struct PieceDef {
     symbol: char,
     value: i32,
-    generator: fn(Position, &Board) -> Vec<Board>
+    generator: fn(Position, &Board) -> Board
 }
 
 pub fn new(def: PieceDef, color: Color) -> Piece {

@@ -4,9 +4,20 @@ mod piece_defs;
 use std::vec::Vec;
 
 pub const BOARD_SZ: usize = 64;
-pub type Squares = [Option<Piece>; BOARD_SZ];
-pub type Vector2D = (i32, i32);
-pub type Position = usize;
+pub const SIDE_LEN: usize = 8;
+pub type Squares = [[Option<Piece>; SIDE_LEN]; SIDE_LEN];
+
+#[derive(Copy, Clone)]
+pub struct Vector {
+    x: i32,
+    y: i32,
+}
+
+#[derive(Copy, Clone)]
+pub struct Position {
+    x: usize,
+    y: usize,
+}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Color {
@@ -15,11 +26,14 @@ pub enum Color {
 }
 
 #[derive(Copy, Clone)]
-pub struct Piece {
+pub struct Piece<'a> {
     color: Color,               // white or black
     symbol: char,               // text representation of the piece
     value: i32,                 // the relative value of the piece
-    pub generator: fn(Position, &Board) -> Vec<Board>
+    board: &'a Board,           // the board this piece is on
+    position: Position,         // its position on the board
+    pub generator: fn(&Piece, usize) -> Board,
+    next_vector: fn(usize) -> (Vector2D, Option<usize>) // index -> direction + next index + condition
 }
 
 impl Piece {
@@ -42,6 +56,48 @@ impl Piece {
 
     pub fn is_enemy(&self, my_color: Color) -> bool {
         self.color != my_color
+    }
+}
+
+enum GeneratorState {
+    // generate delta vector from the piece's original
+    // position, by using embedded index into vector LUT
+    // for the piece, then post increment index
+    Next(usize),
+
+    // generate delta from embedded position,
+    // by using embedded index into vector LUT,
+    // and don't increment index
+    Continue(usize, Vector2D),
+}
+
+pub struct BoardGenerator<'a> {
+    piece: &'a Piece<'a>,
+    state: GeneratorState,
+}
+
+impl<'a> IntoIterator for &'a Piece<'a> {
+    type Item = Board;
+    type IntoIter = BoardGenerator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BoardGenerator {
+            piece: &self,
+            state: GeneratorState::Next(0),
+        }
+    }
+}
+
+impl<'a> Iterator for BoardGenerator<'a> {
+    type Item = Board;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (delta_vect, has_next) = (self.piece.next_vector)(&self);
+        // if next_index is Some index, check if condition is met
+        // to legally generate board. if illegal, try again as long
+        // as next_index is not None
+
+        Some(Board::new())
     }
 }
 
@@ -105,7 +161,7 @@ impl<'a> Iterator for BoardIterator<'a> {
     type Item = (Position, &'a Piece);
 
     // FIXME: infinite loop ahead
-    fn next(&mut self) -> Option<(Position, &'a Piece)> {
+    fn next(&mut self) -> Option<Self::Item> {
         loop {
             let i = self.index;
             match &self.squares[i] {
