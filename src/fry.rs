@@ -2,7 +2,7 @@
 extern crate termcolor;
 
 mod gameset;
-use gameset::{Board, Color, Position};
+use gameset::{board::Board, piece::Color, position::Position};
 use gameset::piece_defs;
 
 use std::io;
@@ -13,19 +13,16 @@ fn main() {
     let mut starter_board = gameset::generate_starting_board();
 
     let rook_pos = Position::new(3, 5);
-    let rook = piece_defs::from_def(piece_defs::rook::def(), &starter_board, Color::WHITE, rook_pos);
+    let rook = piece_defs::from_def(piece_defs::rook::def(), Color::WHITE, rook_pos);
     starter_board.insert(rook);
 
     print_board(&starter_board);
 
     for piece in starter_board.pieces() {
         for possible_board in piece.generator(&starter_board) {
-            println!("generation for piece done:");
             print_board(&possible_board);
         }
     }
-
-    // IDE: lagre brikkene i en hashmap? key: posisjon. value: brikken.
 }
 
 fn print_board_files() {
@@ -34,6 +31,10 @@ fn print_board_files() {
         print!(" {} ", c);
     }
     println!("");
+}
+
+fn print_board_rank(y: usize) {
+    print!(" {} ", (7-y) + 1);
 }
 
 fn print_board(board: &Board) {
@@ -52,14 +53,10 @@ fn print_board(board: &Board) {
     };
 
     print_board_files();
-
     for y in 0..8 {
         for x in 0..8 {
-            // print ranks
-            //if x == -1 || x == 8 {
-            //    print!(" {} ", (7-y) + 1);
-            //    continue;
-            //}
+            // print rank on left side
+            if x == 0 {  print_board_rank(y); }
             // print the squares
             print_sq(
                 if (x+y) & 1 == 0 {white_sq} else {black_sq},
@@ -68,10 +65,11 @@ fn print_board(board: &Board) {
                     None => ' '
                 }
             ).unwrap();
+            // print rank on right side
+            if x == 7 { print_board_rank(y); }
         }
         println!("");
     }
-
     print_board_files();
 }
 
