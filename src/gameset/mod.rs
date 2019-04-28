@@ -15,7 +15,7 @@ pub fn generate_starting_board() -> Board {
     let mut starter_board = Board::new();
 
     // white pieces
-    for x in 0..8 {
+    for x in 3..5 {
         starter_board.insert(
             piece_defs::from_def(
                 piece_defs::pawn::def(),
@@ -34,7 +34,7 @@ pub fn generate_starting_board() -> Board {
     //push(PieceClass::ROOK,   Position::new(7, 7));
 
     // black pieces
-    for x in 0..8 {
+    for x in 3..4 {
         starter_board.insert(
             piece_defs::from_def(
                 piece_defs::pawn::def(),

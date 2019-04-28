@@ -20,5 +20,5 @@ pub fn def() -> PieceDef {
 }
 
 fn vector_iterator(iterator: &mut BoardGenerator) -> Option<Vector> {
-    super::repetetive_generator(iterator, &DIRECTIONS)
+    super::gruvi(iterator, &DIRECTIONS, true)
 }

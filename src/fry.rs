@@ -12,9 +12,8 @@ use termcolor::{ColorChoice, ColorSpec, StandardStream, WriteColor};
 fn main() {
     let mut starter_board = gameset::generate_starting_board();
 
-    let rook_pos = Position::new(3, 5);
-    let rook = piece_defs::from_def(piece_defs::rook::def(), Color::WHITE, rook_pos);
-    starter_board.insert(rook);
+    starter_board.insert(piece_defs::from_def(piece_defs::rook::def(), Color::WHITE, Position::new(3, 5)));
+    starter_board.insert(piece_defs::from_def(piece_defs::knight::def(), Color::WHITE, Position::new(5, 7)));
 
     print_board(&starter_board);
 

@@ -1,6 +1,7 @@
 
 pub mod pawn;
 pub mod rook;
+pub mod knight;
 
 use super::{Piece, Color, Position, Vector};
 use super::board::{Board, BoardGenerator, BoardGeneratorState};
@@ -25,9 +26,11 @@ fn common_validation(board: &Board, piece: &Piece, landing_sq: Position, directi
             }
 }
 
-pub fn repetetive_generator(
-        iterator: &mut BoardGenerator, 
-        directions: &[Vector]) -> Option<Vector> {
+/**
+ * the GRand Unified Vector Iterator
+ */
+pub fn gruvi(iterator: &mut BoardGenerator,
+        directions: &[Vector], accumulate: bool) -> Option<Vector> {
 
     let board = iterator.basis_board;
     let piece = iterator.piece;
@@ -46,10 +49,12 @@ pub fn repetetive_generator(
             None => true,
             Some(other_piece) => piece.is_enemy_of(other_piece),
             } {
-        iterator.state = BoardGeneratorState::Accumulate(i, vect);
+        iterator.state =
+            if accumulate { BoardGeneratorState::Accumulate(i, vect) } 
+            else { BoardGeneratorState::Next(i + 1) };
         Some(vect)
     } else {
         iterator.state = BoardGeneratorState::Next(i + 1);
-        return repetetive_generator(iterator, directions);
+        return gruvi(iterator, directions, accumulate);
     }
 }
