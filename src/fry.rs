@@ -17,7 +17,7 @@ fn main() {
 
     print_board(&starter_board);
 
-    for piece in starter_board.pieces() {
+    for piece in starter_board.pieces().filter(|p| {p.color == Color::WHITE}) {
         for possible_board in piece.generator(&starter_board) {
             print_board(&possible_board);
         }

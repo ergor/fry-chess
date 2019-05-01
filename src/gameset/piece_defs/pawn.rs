@@ -33,17 +33,17 @@ fn vector_iterator(iterator: &mut BoardGenerator) -> Option<Vector> {
 
             iterator.state = BoardGeneratorState::Next(i + 1);
             let landing_sq = piece.position + vector;
-            let partially_valid = super::common_validation(board, piece, landing_sq, vector);
+            let minimum_valid = super::boundaries_ok(board, piece, landing_sq, vector);
             match i {
                 0 => { // forward 1
-                    if partially_valid && board.piece_at(landing_sq).is_none() {
+                    if minimum_valid && board.piece_at(landing_sq).is_none() {
                         Some(vector)
                     } else {
                         return vector_iterator(iterator);
                     }
                 },
                 1 => { // forward 2
-                    if partially_valid
+                    if minimum_valid
                         && board.piece_at(piece.position + DIRECTIONS[0]).is_none()
                         && board.piece_at(landing_sq).is_none() {
                         Some(vector)
@@ -52,7 +52,7 @@ fn vector_iterator(iterator: &mut BoardGenerator) -> Option<Vector> {
                     }
                 },
                 2 | 3 => { // attacks
-                    if partially_valid && match board.piece_at(landing_sq) {
+                    if minimum_valid && match board.piece_at(landing_sq) {
                             None => false,
                             Some(other_piece) => piece.is_enemy_of(other_piece)
                         } {

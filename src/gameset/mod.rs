@@ -4,6 +4,7 @@ pub mod piece;
 pub mod piece_defs;
 pub mod vector;
 pub mod position;
+pub mod math;
 
 use vector::Vector;
 use position::Position;

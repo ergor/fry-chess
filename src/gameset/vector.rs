@@ -23,6 +23,17 @@ impl Vector {
     //}
 }
 
+impl ops::Mul<i32> for Vector {
+    type Output = Vector;
+
+    fn mul(self, rhs: i32) -> Vector {
+        Vector {
+            x: self.x * rhs,
+            y: self.y * rhs,
+        }
+    }
+}
+
 impl ops::Neg for Vector {
     type Output = Vector;
 

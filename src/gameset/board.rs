@@ -1,14 +1,15 @@
 
 use super::{Position, Vector};
-use super::piece::{Piece, PieceIterator};
+use super::piece::{Piece, PieceIterator, Color};
 
 pub const BOARD_SZ: usize = 64;
 pub const SIDE_LEN: usize = 8;
 pub type Squares = [[Option<Piece>; SIDE_LEN]; SIDE_LEN]; // [y][x]?
 
 pub struct Board {
-    sum: i32,                   // board evaluation
-    checks: (u32, u32),         // checks against white,black king
+    sum: i32,               // board evaluation
+    checks: (u32, u32),     // checks against white,black king
+    player: Color,          // which player has the turn
     pub squares: Squares    // (0,0) top left; (7,7) bottom right
 }
 
@@ -17,6 +18,7 @@ impl Board{
         Board {
             sum: 0,
             checks: (0, 0),
+            player: Color::WHITE,
             squares: [[None; SIDE_LEN]; SIDE_LEN],
         }
     }
@@ -39,6 +41,29 @@ impl Board{
             squares: &self.squares,
             index: 0,
         }
+    }
+
+    /**
+     * Evaluates score of board and checks if its a legal state.
+     * Returns whether the state is legal.
+     * 
+     * * sum of values of pieces
+     * * bonus points for pieces that defends other pieces
+     * * bonus points for pieces attacking enemy pieces
+     */
+    pub fn evaluate(&mut self, previous_board: &Board) -> bool {
+        let mut sum = 0;
+
+        for piece in self.pieces() {
+            sum += piece.value;
+        }
+
+        let king_exposed = match self.player {
+            Color::WHITE => (self.checks.0 - previous_board.checks.0) > 0,
+            Color::BLACK => (self.checks.1 - previous_board.checks.1) > 0
+        };
+        self.sum = sum;
+        return king_exposed;
     }
 }
 
@@ -68,23 +93,24 @@ impl<'a> Iterator for BoardGenerator<'a> {
     type Item = Board;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.piece.next_vector(self) {
+        let moving_piece = self.piece;
+        match moving_piece.next_vector(self) {
             None => None,
             Some(vect) => {
-                let mut board = Board::new();
+                let mut board = Board::new(); // can i init+copy all in one op?
                 for piece in self.basis_board.pieces() {
-                    if piece.is(self.piece) {
-                        //println!("\tskipped");
-                        continue;
-                    }
+                    if piece.is(moving_piece) { continue; }
                     board.insert(piece.clone());
-                    //println!("\tcopied");
                 }
-                let mut piece = self.piece.clone();
+                let mut piece = moving_piece.clone();
                 piece.position += vect;
 
                 board.insert(piece);
-                Some(board)
+                if board.evaluate(self.basis_board) {
+                    Some(board)
+                } else {
+                    self.next()
+                }
             }
         }
     }

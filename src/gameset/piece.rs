@@ -12,7 +12,7 @@ pub enum Color {
 pub struct Piece {
     pub color: Color,               // white or black
     symbol: char,               // text representation of the piece
-    value: i32,                 // the relative value of the piece
+    pub value: i32,                 // the relative value of the piece
     pub position: Position,         // its position on the board
     vector_iterator: fn(&mut BoardGenerator) -> Option<Vector>
 }
@@ -70,13 +70,9 @@ impl<'a> Iterator for PieceIterator<'a> {
             let x = self.index & 7;     // n % 2^i = n & (2^i - 1)
             let y = self.index >> 3;    // n / 2^i = n >> i
             self.index += 1;
-            //println!("probing: x {}, y {}", x, y);
             match &self.squares[y][x] {
                 None => continue,
-                Some(piece) => {
-                    //println!("\tfound");
-                    return Some(piece);
-                }
+                Some(piece) => return Some(piece)
             }
         }
         None
