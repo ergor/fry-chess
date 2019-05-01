@@ -7,15 +7,12 @@ use super::gameset::math;
 fn test_range_pos() {
     let mut grid = [[' '; 8]; 8];
     let origin = Position::new(3, 5);
-    let direction = Vector::new(0, 1);
+    let direction = Vector::new(1, -1);
 
-    let (len, range) = math::range_pos(origin, direction);
+    let range = math::range_pos(origin, direction);
 
-    for (i, pos) in range.iter().enumerate() {
+    for pos in range.iter() {
         println!("{:?}", pos);
-        if i == len {
-            break;
-        }
         grid[pos.y][pos.x] = '*';
     }
 

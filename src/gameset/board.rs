@@ -63,7 +63,7 @@ impl Board{
             Color::BLACK => (self.checks.1 - previous_board.checks.1) > 0
         };
         self.sum = sum;
-        return king_exposed;
+        return !king_exposed;
     }
 }
 
