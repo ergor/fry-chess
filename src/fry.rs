@@ -1,6 +1,9 @@
 
 extern crate termcolor;
 
+#[cfg(test)]
+mod tests;
+
 mod gameset;
 use gameset::{board::Board, piece::Color, position::Position};
 use gameset::piece_defs;
@@ -8,6 +11,11 @@ use gameset::piece_defs;
 use std::io;
 use std::io::Write;
 use termcolor::{ColorChoice, ColorSpec, StandardStream, WriteColor};
+
+type SqColor = (Option<termcolor::Color>, Option<termcolor::Color>);
+
+const WHITE_SQ: SqColor = (Some(termcolor::Color::Black), Some(termcolor::Color::White));
+const BLACK_SQ: SqColor = (Some(termcolor::Color::White), Some(termcolor::Color::Black));
 
 fn main() {
     let mut starter_board = gameset::generate_starting_board();
@@ -36,20 +44,15 @@ fn print_board_rank(y: usize) {
     print!(" {} ", (7-y) + 1);
 }
 
-fn print_board(board: &Board) {
+pub fn print_sq(st: &mut StandardStream, c: char, colors: SqColor) -> io::Result<()> {
+        st.set_color(ColorSpec::new().set_fg(colors.0).set_bg(colors.1))?;
+        write!(st, " {} ", c)?;
+        st.reset()
+}
+
+pub fn print_board(board: &Board) {
 
     let mut stdout = StandardStream::stdout(ColorChoice::Auto);
-
-    let white_sq = (Some(termcolor::Color::Black), Some(termcolor::Color::White));
-    let black_sq = (Some(termcolor::Color::White), Some(termcolor::Color::Black));
-
-    let mut print_sq = | colors: (Option<termcolor::Color>, Option<termcolor::Color>),
-                         c: char |
-                       -> io::Result<()> {
-        stdout.set_color(ColorSpec::new().set_fg(colors.0).set_bg(colors.1))?;
-        write!(stdout, " {} ", c)?;
-        stdout.reset()
-    };
 
     print_board_files();
     for y in 0..8 {
@@ -58,11 +61,12 @@ fn print_board(board: &Board) {
             if x == 0 {  print_board_rank(y); }
             // print the squares
             print_sq(
-                if (x+y) & 1 == 0 {white_sq} else {black_sq},
+                &mut stdout,
                 match board.piece_at(Position::new(x, y)) {
                     Some(piece) => piece.character(),
                     None => ' '
-                }
+                },
+                if (x+y) & 1 == 0 {WHITE_SQ} else {BLACK_SQ}
             ).unwrap();
             // print rank on right side
             if x == 7 { print_board_rank(y); }
@@ -71,4 +75,3 @@ fn print_board(board: &Board) {
     }
     print_board_files();
 }
-

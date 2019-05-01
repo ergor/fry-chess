@@ -8,6 +8,10 @@ pub struct Vector {
 }
 
 impl Vector {
+    pub fn new(x: i32, y: i32) -> Vector {
+        Vector { x, y }
+    }
+
     pub fn add(&self, vect: Vector) -> Vector {
         Vector {
             x: self.x + vect.x,
