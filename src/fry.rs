@@ -1,12 +1,16 @@
 
 extern crate termcolor;
 
+/*
 #[cfg(test)]
 mod tests;
-
+*/
 mod gameset;
-use gameset::{board::Board, piece::Color, position::Position};
-use gameset::piece_defs;
+mod math;
+
+use math::*;
+use gameset::*;
+use gameset::piece_defs::*;
 
 use std::io;
 use std::io::Write;
@@ -18,10 +22,10 @@ const WHITE_SQ: SqColor = (Some(termcolor::Color::Black), Some(termcolor::Color:
 const BLACK_SQ: SqColor = (Some(termcolor::Color::White), Some(termcolor::Color::Black));
 
 fn main() {
-    let mut starter_board = gameset::generate_starting_board();
+    let mut starter_board = defaults::generate_starting_board();
 
-    starter_board.insert(piece_defs::from_def(piece_defs::rook::def(), Color::WHITE, Position::new(3, 5)));
-    starter_board.insert(piece_defs::from_def(piece_defs::knight::def(), Color::WHITE, Position::new(5, 7)));
+    starter_board.insert(common::from_def(rook::def(), Color::WHITE, Position::new(3, 5)));
+    starter_board.insert(common::from_def(knight::def(), Color::WHITE, Position::new(5, 7)));
 
     print_board(&starter_board);
 

@@ -1,7 +1,6 @@
 
-use super::PieceDef;
-use super::super::{Vector};
-use super::super::board::BoardGenerator;
+use super::super::*;
+use super::common::*;
 
 const DIRS_SZ: usize = 4;
 const DIRECTIONS: [Vector; DIRS_SZ] = [
@@ -20,5 +19,5 @@ pub fn def() -> PieceDef {
 }
 
 fn vector_iterator(iterator: &mut BoardGenerator) -> Option<Vector> {
-    super::gruvi(iterator, &DIRECTIONS, true)
+    gruvi(iterator, &DIRECTIONS, true)
 }

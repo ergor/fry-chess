@@ -1,7 +1,5 @@
 
-use super::gameset::position::Position;
-use super::gameset::vector::Vector;
-use super::gameset::math;
+use super::math::*;
 
 #[test]
 fn test_range_pos() {
