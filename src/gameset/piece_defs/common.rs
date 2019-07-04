@@ -21,7 +21,7 @@ pub fn boundaries_ok(board: &Board, piece: &Piece, landing_sq: Position, directi
             }
 }
 
-pub fn generate(moves: &[[Vector; MAX_MOVES]], piece: &Piece) -> Vec<Position> {
+pub fn generate(board: &Board, moves: &[[Vector; MAX_MOVES]], moving_piece: &Piece) -> Vec<Position> {
     let mut positions: Vec<Position> = Vec::new();
 
     for direction in moves {
@@ -30,9 +30,19 @@ pub fn generate(moves: &[[Vector; MAX_MOVES]], piece: &Piece) -> Vec<Position> {
             if vector.x == 0 && vector.y == 0 {
                 break;
             }
+            
             let vector = *vector;
-            let new_pos = piece.position + vector;
+            let new_pos = moving_piece.position + vector;
             if Board::within_bounds(new_pos) {
+                let piece = board.piece_at(new_pos);
+                if piece.is_some() {
+                    if piece.unwrap().is_enemy_of(moving_piece) {
+                        positions.push(new_pos); // capture enemy
+                        break; // but don't move further in this direction
+                    } else {
+                        break; // friendly piece; can't go here nor further
+                    }
+                }
                 positions.push(new_pos);
             }
         }

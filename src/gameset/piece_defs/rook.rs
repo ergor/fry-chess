@@ -21,5 +21,5 @@ pub fn def() -> PieceDef {
 }
 
 fn generator(board: &Board, piece: &Piece) -> Vec<Position> {
-    generate(&DIRECTIONS, piece)
+    generate(board, &DIRECTIONS, piece)
 }
