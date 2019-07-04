@@ -6,7 +6,7 @@ pub fn generate_starting_board() -> Board {
 
     // white pieces
     for x in 3..5 {
-        starter_board.insert(
+        starter_board.insert_mut(
             piece_defs::common::from_def(
                 piece_defs::pawn::def(),
                 Color::WHITE,
@@ -25,7 +25,7 @@ pub fn generate_starting_board() -> Board {
 
     // black pieces
     for x in 3..4 {
-        starter_board.insert(
+        starter_board.insert_mut(
             piece_defs::common::from_def(
                 piece_defs::pawn::def(),
                 Color::BLACK,

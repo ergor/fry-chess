@@ -1,13 +1,15 @@
 use super::super::*;
 
+pub const MAX_MOVES: usize = 7; // why can't i use this in the macros?
+
 pub struct PieceDef {
     pub symbol: char,
     pub value: i32,
-    pub vector_iterator: fn(&mut BoardGenerator) -> Option<Vector>
+    pub generator: fn(&Board, &Piece) -> Vec<Position>
 }
 
 pub fn from_def(def: PieceDef, color: Color, position: Position) -> Piece {
-    Piece::new(color, def.symbol, def.value, position, def.vector_iterator)
+    Piece::new(color, def.symbol, def.value, position, def.generator)
 }
 
 /// out of bounds and phaze-thru-pieces check
@@ -19,35 +21,61 @@ pub fn boundaries_ok(board: &Board, piece: &Piece, landing_sq: Position, directi
             }
 }
 
-/**
- * the GRand Unified Vector Iterator
- */
-pub fn gruvi(iterator: &mut BoardGenerator,
-             directions: &[Vector], accumulate: bool) -> Option<Vector> {
+pub fn generate(moves: &[[Vector; MAX_MOVES]], piece: &Piece) -> Vec<Position> {
+    let mut positions: Vec<Position> = Vec::new();
 
-    let board = iterator.basis_board;
-    let piece = iterator.piece;
-    let (i, vect) = match iterator.state {
-        BoardGeneratorState::Next(i) => {
-            if i == directions.len() { return None; }
-            (i, directions[i])
-        },
-        BoardGeneratorState::Accumulate(i, acc) => (i, acc.add(directions[i]))
-    };
-
-    let dir_vect = directions[i];
-    let landing_sq = piece.position + vect;
-    if boundaries_ok(board, piece, landing_sq, dir_vect)
-        && match board.piece_at(landing_sq) {
-            None => true,
-            Some(other_piece) => piece.is_enemy_of(other_piece),
-            } {
-        iterator.state =
-            if accumulate { BoardGeneratorState::Accumulate(i, vect) } 
-            else { BoardGeneratorState::Next(i + 1) };
-        Some(vect)
-    } else {
-        iterator.state = BoardGeneratorState::Next(i + 1);
-        return gruvi(iterator, directions, accumulate);
+    for direction in moves {
+        for vector in direction {
+            // go to next direction if we find padding
+            if vector.x == 0 && vector.y == 0 {
+                break;
+            }
+            let vector = *vector;
+            let new_pos = piece.position + vector;
+            if Board::within_bounds(new_pos) {
+                positions.push(new_pos);
+            }
+        }
     }
+
+    positions
+}
+
+/**
+ * IT IS IMPORTANT THAT THE FACTOR == INDEX
+ */
+#[macro_export]
+macro_rules! ascending_vector {
+    ($v:expr) => {
+        {
+            const VECT: [Vector; 7 /*MAX_MOVES*/] = [
+                Vector {x: 1 * $v.x, y: 1 * $v.y},
+                Vector {x: 2 * $v.x, y: 2 * $v.y},
+                Vector {x: 3 * $v.x, y: 3 * $v.y},
+                Vector {x: 4 * $v.x, y: 4 * $v.y},
+                Vector {x: 5 * $v.x, y: 5 * $v.y},
+                Vector {x: 6 * $v.x, y: 6 * $v.y},
+                Vector {x: 7 * $v.x, y: 7 * $v.y},
+            ];
+            VECT
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! pad_vector {
+    ($v:expr) => {
+        {
+            const VECT: [Vector; 7 /*MAX_MOVES*/] = [
+                Vector {x: $v.x, y: $v.y},
+                Vector {x: 0, y: 0},
+                Vector {x: 0, y: 0},
+                Vector {x: 0, y: 0},
+                Vector {x: 0, y: 0},
+                Vector {x: 0, y: 0},
+                Vector {x: 0, y: 0},
+            ];
+            VECT
+        }
+    };
 }

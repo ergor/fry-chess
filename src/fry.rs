@@ -24,14 +24,14 @@ const BLACK_SQ: SqColor = (Some(termcolor::Color::White), Some(termcolor::Color:
 fn main() {
     let mut starter_board = defaults::generate_starting_board();
 
-    starter_board.insert(common::from_def(rook::def(), Color::WHITE, Position::new(3, 5)));
-    starter_board.insert(common::from_def(knight::def(), Color::WHITE, Position::new(5, 7)));
+    starter_board.insert_mut(common::from_def(rook::def(), Color::WHITE, Position::new(3, 5)));
+    starter_board.insert_mut(common::from_def(knight::def(), Color::WHITE, Position::new(5, 7)));
 
     print_board(&starter_board);
 
-    for piece in starter_board.pieces().filter(|p| {p.color == Color::WHITE}) {
-        for possible_board in piece.generator(&starter_board) {
-            print_board(&possible_board);
+    for moving_piece in starter_board.pieces().filter(|p| {p.color == Color::WHITE}) {
+        for board in starter_board.generate(moving_piece) {
+            print_board(&board);
         }
     }
 }

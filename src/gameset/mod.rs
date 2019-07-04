@@ -7,9 +7,31 @@ pub const BOARD_SZ: usize = 64;
 pub const SIDE_LEN: usize = 8;
 pub type Squares = [[Option<Piece>; SIDE_LEN]; SIDE_LEN]; // [y][x]?
 
+
+pub struct BoardMeta {
+    checks: i32,                    // checks against oneself's king
+    left_rook_moved: bool,          // whether left rooks has been moved
+    right_rook_moved: bool,         // whether right rook has been moved
+    king_moved: bool,               // whether the king has been moved
+    en_passant: [bool; SIDE_LEN]    // pawns that can be lost via en passant
+}
+
+impl BoardMeta {
+    pub fn new() -> BoardMeta {
+        BoardMeta {
+            checks: 0,
+            left_rook_moved: false,
+            right_rook_moved: false,
+            king_moved: false,
+            en_passant: [false; SIDE_LEN]
+        }
+    }
+}
+
 pub struct Board {
     sum: i32,               // board evaluation
-    checks: (u32, u32),     // checks against white,black king
+    meta_white: BoardMeta,  // metadata for white player
+    meta_black: BoardMeta,  // metadata for black player
     player: Color,          // which player has the turn
     pub squares: Squares    // (0,0) top left; (7,7) bottom right
 }
@@ -18,7 +40,8 @@ impl Board{
     pub fn new() -> Board {
         Board {
             sum: 0,
-            checks: (0, 0),
+            meta_white: BoardMeta::new(),
+            meta_black: BoardMeta::new(),
             player: Color::WHITE,
             squares: [[None; SIDE_LEN]; SIDE_LEN],
         }
@@ -28,7 +51,7 @@ impl Board{
         pos.x < SIDE_LEN && pos.y < SIDE_LEN
     }
 
-    pub fn insert(&mut self, piece: Piece) {
+    pub fn insert_mut(&mut self, piece: Piece) {
         let pos = piece.position;
         self.squares[pos.y][pos.x] = Some(piece);
     }
@@ -52,7 +75,7 @@ impl Board{
      * * bonus points for pieces that defends other pieces
      * * bonus points for pieces attacking enemy pieces
      */
-    pub fn evaluate(&mut self, previous_board: &Board) -> bool {
+    pub fn evaluate_mut(&mut self, previous_board: &Board) -> bool {
         let mut sum = 0;
 
         for piece in self.pieces() {
@@ -60,60 +83,35 @@ impl Board{
         }
 
         let king_exposed = match self.player {
-            Color::WHITE => (self.checks.0 - previous_board.checks.0) > 0,
-            Color::BLACK => (self.checks.1 - previous_board.checks.1) > 0
+            Color::WHITE => (self.meta_white.checks - previous_board.meta_white.checks) > 0,
+            Color::BLACK => (self.meta_black.checks - previous_board.meta_black.checks) > 0
         };
         self.sum = sum;
         return !king_exposed;
     }
-}
 
-/**
- * 
- */
-pub enum BoardGeneratorState {
-    // get next legal vector from piece's directions LUT.
-    // post increment LUT index.
-    Next(usize),
+    pub fn generate(&self, moving_piece: &Piece) -> Vec<Board> {
+        let mut boards = Vec::new();
 
-    // get next legal vector by adding vector from piece's directions LUT to the
-    // accumulated value. don't increment LUT index.
-    Accumulate(usize, Vector),
-}
-
-pub struct BoardGenerator<'a> {
-    pub piece: &'a Piece,
-    pub basis_board: &'a Board,
-    pub state: BoardGeneratorState,
-}
-
-/**
- * 
- */
-impl<'a> Iterator for BoardGenerator<'a> {
-    type Item = Board;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let moving_piece = self.piece;
-        match moving_piece.next_vector(self) {
-            None => None,
-            Some(vect) => {
-                let mut board = Board::new(); // can i init+copy all in one op?
-                for piece in self.basis_board.pieces() {
-                    if piece.is(moving_piece) { continue; }
-                    board.insert(piece.clone());
+        for position in(moving_piece.generator)(self, moving_piece) {
+            // copy all pieces over, except for the moving piece
+            let mut new_board = Board::new();
+            for piece in self.pieces() {
+                if piece.is(moving_piece) {
+                    continue;
                 }
-                let mut piece = moving_piece.clone();
-                piece.position += vect;
-
-                board.insert(piece);
-                if board.evaluate(self.basis_board) {
-                    Some(board)
-                } else {
-                    self.next()
-                }
+                let piece = *piece;
+                new_board.insert_mut(piece);
             }
+            // make copy of moving piece and update position
+            let mut moving_piece = *moving_piece;
+            moving_piece.position = position;
+
+            new_board.insert_mut(moving_piece);
+            boards.push(new_board);
         }
+
+        boards
     }
 }
 
@@ -131,19 +129,22 @@ pub struct Piece {
     symbol: char,               // text representation of the piece
     pub value: i32,                 // the relative value of the piece
     pub position: Position,         // its position on the board
-    vector_iterator: fn(&mut BoardGenerator) -> Option<Vector>
+    pub generator: fn(&Board, &Piece) -> Vec<Position>
 }
 
 impl Piece {
-    pub fn new(color: Color, symbol: char, value: i32, position: Position,
-               vector_iterator: fn(&mut BoardGenerator) -> Option<Vector>)
+    pub fn new(color: Color, 
+               symbol: char, 
+               value: i32, 
+               position: Position,
+               generator: fn(&Board, &Piece) -> Vec<Position>)
                -> Piece {
         let value = match color {
             Color::WHITE => value,
             Color::BLACK => -value,
         };
 
-        Piece { color, symbol, value, position, vector_iterator }
+        Piece { color, symbol, value, position, generator }
     }
 
     pub fn character(&self) -> char {
@@ -155,18 +156,6 @@ impl Piece {
 
     pub fn is_enemy_of(&self, piece: &Piece) -> bool {
         self.color != piece.color
-    }
-
-    pub fn next_vector(&self, board_generator: &mut BoardGenerator) -> Option<Vector> {
-        (self.vector_iterator)(board_generator)
-    }
-
-    pub fn generator<'a>(&'a self, basis_board: &'a Board) -> BoardGenerator<'a> {
-        BoardGenerator {
-            piece: self,
-            basis_board,
-            state: BoardGeneratorState::Next(0),
-        }
     }
 
     pub fn is(&self, piece: &Piece) -> bool {
