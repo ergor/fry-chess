@@ -1,11 +1,13 @@
 [package]
 name = "fry-chess"
 version = "0.1.0"
-authors = ["zzz"]
+authors = ["Erol Gorancic"]
 edition = "2018"
 
 [dependencies]
 termcolor = "1"
+san-rs = "^0.2"
+fen = "0"
 
 [[bin]]
 name = "fry"

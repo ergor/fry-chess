@@ -2,16 +2,6 @@ use super::super::*;
 
 pub const MAX_MOVES: usize = 7; // why can't i use this in the macros?
 
-pub struct PieceDef {
-    pub symbol: char,
-    pub value: i32,
-    pub generator: fn(&Board, &Piece) -> Vec<Position>
-}
-
-pub fn from_def(def: PieceDef, color: Color, position: Position) -> Piece {
-    Piece::new(color, def.symbol, def.value, position, def.generator)
-}
-
 /// out of bounds and phaze-thru-pieces check
 pub fn boundaries_ok(board: &Board, piece: &Piece, landing_sq: Position, direction: Vector) -> bool {
     Board::within_bounds(landing_sq)

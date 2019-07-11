@@ -10,16 +10,7 @@ const DIRECTIONS: [Vector; DIRS_SZ] = [
     Vector {x: 1, y:-1},
 ];
 
-pub fn def() -> PieceDef {
-    PieceDef {
-        symbol: 'p',
-        value: 100,
-        generator,
-    }
-}
-
-
-fn generator(board: &Board, piece: &Piece) -> Vec<Position> {
+pub fn generator(board: &Board, piece: &Piece) -> Vec<Position> {
     Vec::new()
 }
 

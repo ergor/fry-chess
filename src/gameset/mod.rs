@@ -1,7 +1,10 @@
-pub mod defaults;
+
 pub mod piece_defs;
 
 use super::math::*;
+
+/* BOARD ***********************************************************************
+ */
 
 pub const BOARD_SZ: usize = 64;
 pub const SIDE_LEN: usize = 8;
@@ -42,7 +45,7 @@ impl Board{
             sum: 0,
             meta_white: BoardMeta::new(),
             meta_black: BoardMeta::new(),
-            player: Color::WHITE,
+            player: Color::White,
             squares: [[None; SIDE_LEN]; SIDE_LEN],
         }
     }
@@ -79,12 +82,12 @@ impl Board{
         let mut sum = 0;
 
         for piece in self.pieces() {
-            sum += piece.value;
+            sum += piece.value();
         }
 
         let king_exposed = match self.player {
-            Color::WHITE => (self.meta_white.checks - previous_board.meta_white.checks) > 0,
-            Color::BLACK => (self.meta_black.checks - previous_board.meta_black.checks) > 0
+            Color::White => (self.meta_white.checks - previous_board.meta_white.checks) > 0,
+            Color::Black => (self.meta_black.checks - previous_board.meta_black.checks) > 0
         };
         self.sum = sum;
         return !king_exposed;
@@ -93,7 +96,7 @@ impl Board{
     pub fn generate(&self, moving_piece: &Piece) -> Vec<Board> {
         let mut boards = Vec::new();
 
-        for position in(moving_piece.generator)(self, moving_piece) {
+        for position in moving_piece.generator()(self, moving_piece) {
             // copy all pieces over, except for the moving piece
             let mut new_board = Board::new();
             for piece in self.pieces() {
@@ -113,44 +116,114 @@ impl Board{
 
         boards
     }
+
+    pub fn from_state(state: fen::BoardState) -> Board {
+        fn convert_piece(piece: (usize, &Option<fen::Piece>)) -> Option<Piece> {
+            let (i, p) = piece;
+            match p {
+                None => None,
+                Some(p) => {
+                    let col = i % 8; // cols are same as mine.
+                    let row = i / 8; // but rows start at bottom.
+                    let pos = Position::new(col, 7 - row); // thus: invert rows.
+                    let color = match p.color {
+                        fen::Color::Black => Color::Black,
+                        fen::Color::White => Color::White
+                    };
+                    let kind = match p.kind {
+                       fen::PieceKind::Pawn => PieceKind::Pawn,
+                       fen::PieceKind::Knight => PieceKind::Knight,
+                       fen::PieceKind::Bishop => PieceKind::Bishop,
+                       fen::PieceKind::Rook => PieceKind::Rook,
+                       fen::PieceKind::Queen => PieceKind::Queen,
+                       fen::PieceKind::King => PieceKind::King
+                    };
+                    Some(Piece::new(color, pos, kind))
+                }
+            }
+        }
+
+        let mut board = Board::new();
+        state.pieces.iter()
+            .enumerate()
+            .filter_map(|e| convert_piece(e))
+            .for_each(|p| board.insert_mut(p));
+        return board;
+    }
 }
 
-/* *********************************************/
+/* PIECE ***********************************************************************
+ */
+
+type FnGenerator = fn(board: &Board, piece: &Piece) -> Vec<Position>;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Color {
-    WHITE,
-    BLACK
+    White,
+    Black
+}
+
+#[derive(Copy, Clone)]
+pub enum PieceKind {
+    Pawn,
+    Knight,
+    Bishop,
+    Rook,
+    Queen,
+    King
 }
 
 #[derive(Copy, Clone)]
 pub struct Piece {
-    pub color: Color,               // white or black
-    symbol: char,               // text representation of the piece
-    pub value: i32,                 // the relative value of the piece
-    pub position: Position,         // its position on the board
-    pub generator: fn(&Board, &Piece) -> Vec<Position>
+    pub color: Color,       // white or black
+    pub position: Position, // its position on the board
+    pub kind: PieceKind,    // type, value, character, generator
 }
 
 impl Piece {
     pub fn new(color: Color, 
-               symbol: char, 
-               value: i32, 
                position: Position,
-               generator: fn(&Board, &Piece) -> Vec<Position>)
+               kind: PieceKind)
                -> Piece {
-        let value = match color {
-            Color::WHITE => value,
-            Color::BLACK => -value,
-        };
-
-        Piece { color, symbol, value, position, generator }
+        Piece { color, position, kind }
     }
 
     pub fn character(&self) -> char {
+        let symbol = match self.kind {
+            PieceKind::Pawn => 'p',
+            PieceKind::Knight => 'n',
+            PieceKind::Bishop => 'b',
+            PieceKind::Rook => 'r',
+            PieceKind::Queen => 'q',
+            PieceKind::King => 'k'
+        };
         match self.color {
-            Color::BLACK => self.symbol.to_ascii_lowercase(),
-            Color::WHITE => self.symbol.to_ascii_uppercase(),
+            Color::Black => symbol.to_ascii_lowercase(),
+            Color::White => symbol.to_ascii_uppercase(),
+        }
+    }
+
+    pub fn value(&self) -> i32 {
+        let val = match self.kind {
+            PieceKind::Pawn => 100,
+            PieceKind::Knight => 300,
+            PieceKind::Bishop => 300,
+            PieceKind::Rook => 500,
+            PieceKind::Queen => 900,
+            PieceKind::King => 999999
+        };
+        match self.color {
+            Color::Black => -val,
+            Color::White => val,
+        }
+    }
+
+    pub fn generator(&self) -> FnGenerator {
+        match self.kind {
+            PieceKind::Pawn => piece_defs::pawn::generator,
+            PieceKind::Knight => piece_defs::knight::generator,
+            PieceKind::Rook => piece_defs::rook::generator,
+            _ => panic!("generator not implemented")
         }
     }
 

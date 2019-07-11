@@ -9,31 +9,73 @@ mod gameset;
 mod math;
 
 use math::*;
+use math::Position;
 use gameset::*;
 use gameset::piece_defs::*;
 
+use std::env;
 use std::io;
 use std::io::Write;
+use std::io::BufRead;
+use std::fs::File;
+
+use san_rs::Move;
+use fen::BoardState;
 use termcolor::{ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 type SqColor = (Option<termcolor::Color>, Option<termcolor::Color>);
 
+const DEFAULT_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const WHITE_SQ: SqColor = (Some(termcolor::Color::Black), Some(termcolor::Color::White));
 const BLACK_SQ: SqColor = (Some(termcolor::Color::White), Some(termcolor::Color::Black));
 
 fn main() {
-    let mut starter_board = defaults::generate_starting_board();
+    let args: Vec<String> = env::args().collect();
+    let mut fen = String::new();
 
-    starter_board.insert_mut(common::from_def(rook::def(), Color::WHITE, Position::new(3, 5)));
-    starter_board.insert_mut(common::from_def(knight::def(), Color::WHITE, Position::new(5, 7)));
+    if args.len() > 1 {
+        let file = File::open(&args[1]).unwrap();
+        let mut reader = io::BufReader::new(file);
+        reader.read_line(&mut fen).unwrap();
+    } else {
+        fen.push_str(DEFAULT_FEN);
+    }
+
+    let board_state = BoardState::from_fen(&fen).unwrap();
+    let starter_board = Board::from_state(board_state);
 
     print_board(&starter_board);
 
-    for moving_piece in starter_board.pieces().filter(|p| {p.color == Color::WHITE}) {
-        for board in starter_board.generate(moving_piece) {
-            print_board(&board);
+    let mut i = 0;
+    loop {
+        println!("ply: {}, move: {}", i+1, (i/2) + 1);
+        let mov = player_move();
+        if let Err(e) = mov {
+            println!("invalid input");
+            continue;
         }
+        let mov = Move::parse(&mov.unwrap());
+        println!("{:?}", mov);
+
+        i += 1;
     }
+
+    //for moving_piece in starter_board.pieces().filter(|p| {p.color == Color::White}) {
+    //    for board in starter_board.generate(moving_piece) {
+    //        print_board(&board);
+    //    }
+    //}
+
+
+}
+
+fn player_move() -> io::Result<String> {
+    print!("player> ");
+    io::stdout().flush() ?;
+    let mut input = String::new();
+    io::stdin().read_line(&mut input) ?;
+    input.pop();
+    Ok(input)
 }
 
 fn print_board_files() {
