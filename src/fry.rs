@@ -42,30 +42,26 @@ fn main() {
     }
 
     let board_state = BoardState::from_fen(&fen).unwrap();
-    let starter_board = Board::from_state(board_state);
+    let mut played_boards = vec!(Board::from_state(board_state));
+    let mut ply = 0;
 
-    print_board(&starter_board);
-
-    let mut i = 0;
     loop {
-        println!("ply: {}, move: {}", i+1, (i/2) + 1);
+        let current_board = played_boards.last().unwrap();
+        print_board(&current_board);
+        println!("ply: {}, move: {}", ply+1, (ply/2) + 1);
 
-        match player_input() {
-            Ok(input) => {
-                match Move::parse(&input) {
-                    Ok(mov) => {
-                        println!("{:?}", mov);
-                        if let Some(board) = starter_board.try_san_move(mov) {
-                            i += 1;
-                        }
-                    },
-                    Err(err) => println!("{:?}", err)
-                }                
-            },
-            Err(err) => {
-                println!("invalid input ({})", err);
-                continue;
+        let next_board = match &current_board.player {
+            Color::White => do_player(&current_board),
+            Color::Black => {
+                println!("calculating move");
+                let mut new_board = current_board.clone();
+                new_board.player = Color::White;
+                Some(new_board)
             }
+        };
+        if let Some(board) = next_board {
+            played_boards.push(board);
+            ply += 1;
         }
     }
     //for moving_piece in starter_board.pieces().filter(|p| {p.color == Color::White}) {
@@ -75,6 +71,26 @@ fn main() {
     //}
 }
 
+fn do_player(current_board: &Board) -> Option<Board> {
+    match player_input() {
+        Ok(input) => {
+            match Move::parse(&input) {
+                Ok(mov) => {
+                    let next_board = current_board.try_san_move(mov);
+                    if next_board.is_some() {
+                        return next_board;
+                    }
+                    println!("could not apply move: {}", input);
+                },
+                Err(err) => println!("{:?}", err)
+            }
+        },
+        Err(err) => {
+            println!("invalid input ({})", err);
+        }
+    }
+    return None;
+}
 
 fn player_input() -> io::Result<String> {
     print!("player> ");

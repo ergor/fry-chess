@@ -9,9 +9,10 @@ use san_rs::{Move, MoveKind};
 
 pub const BOARD_SZ: usize = 64;
 pub const SIDE_LEN: usize = 8;
-pub type Squares = [[Option<Piece>; SIDE_LEN]; SIDE_LEN]; // [y][x]?
+pub type Squares = [[Option<Piece>; SIDE_LEN]; SIDE_LEN]; // [y][x]
 
 
+#[derive(Debug, Clone)]
 pub struct BoardMeta {
     checks: i32,                    // checks against oneself's king
     left_rook_moved: bool,          // whether left rooks has been moved
@@ -32,12 +33,15 @@ impl BoardMeta {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Board {
-    sum: i32,               // board evaluation
-    meta_white: BoardMeta,  // metadata for white player
-    meta_black: BoardMeta,  // metadata for black player
-    player: Color,          // which player has the turn
-    pub squares: Squares    // (0,0) top left; (7,7) bottom right
+    pub sum: i32,               // board evaluation
+    pub meta_white: BoardMeta,  // metadata for white player
+    pub meta_black: BoardMeta,  // metadata for black player
+    pub player: Color,          // which player has the turn
+
+    // (0,0) top left; (7,7) bottom right
+    pub squares: [[Option<Piece>; SIDE_LEN]; SIDE_LEN]
 }
 
 impl Board{
@@ -102,8 +106,13 @@ impl Board{
         let mut boards = Vec::new();
 
         for position in moving_piece.generator()(self, moving_piece) {
-            // copy all pieces over, except for the moving piece
             let mut new_board = Board::new();
+            // after this move, of course it's the other player's turn
+            match self.player {
+                Color::White => new_board.player = Color::Black,
+                Color::Black => new_board.player = Color::White
+            }
+            // copy all pieces over, except for the moving piece
             for piece in self.pieces() {
                 if piece.is(moving_piece) {
                     continue;
@@ -157,22 +166,31 @@ impl Board{
     }
 
     pub fn try_san_move(&self, mov: Move) -> Option<Board> {
-        match mov.move_kind {
+        match &mov.move_kind {
             MoveKind::Normal(src, dst) => {
-                //for moving_piece in starter_board.pieces().filter(|p| {p.color == Color::White}) {
-                //    for board in starter_board.generate(moving_piece) {
-                //        print_board(&board);
-                //    }
-                //}
+
+                fn is_candidate(piece: &Piece, kind: &san_rs::Piece, src: &san_rs::Position) -> bool {
+                    piece.kind == PieceKind::from_san_piece(kind)
+                        && src.x.map_or(true, |x| piece.position.x == x) 
+                        && src.y.map_or(true, |y| piece.position.y == y)
+                }
+
                 let landing_sq = Position::new(dst.x.unwrap(), dst.y.unwrap());
                 let potential = self.pieces()
-                    .filter(|piece| src.x.map_or(true, |x| piece.position.x == x))
-                    .filter(|piece| src.y.map_or(true, |y| piece.position.y == y))
+                    // all pieces of correct color, kind and original position
+                    .filter(|piece| piece.color == self.player && is_candidate(piece, &mov.piece, &src))
+                    // generate all their possible moves
                     .flat_map(|piece| self.generate(piece))
-                    .filter_map(|board| board.piece_at(landing_sq).cloned());
+                    // and get the ones that land on the correct square
+                    .filter(|board| board.piece_at(landing_sq).map_or(false, |piece| piece.kind == PieceKind::from_san_piece(&mov.piece)))
+                    .collect::<Vec<_>>();
+
                 if potential.len() == 1 {
-                    return Some(potential);
+                    return Some(potential[0].clone());
                 }
+                //println!("{:?}", potential);
+                println!("found {} move candidates", potential.len());
+                None
             },
             MoveKind::Castle(side) => {
                 None
@@ -186,13 +204,13 @@ impl Board{
 
 type FnGenerator = fn(board: &Board, piece: &Piece) -> Vec<Position>;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Color {
     White,
     Black
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum PieceKind {
     Pawn,
     Knight,
@@ -202,7 +220,20 @@ pub enum PieceKind {
     King
 }
 
-#[derive(Copy, Clone)]
+impl PieceKind {
+    pub fn from_san_piece(piece: &san_rs::Piece) -> PieceKind {
+        match piece {
+            san_rs::Piece::Pawn => PieceKind::Pawn,
+            san_rs::Piece::Knight => PieceKind::Knight,
+            san_rs::Piece::Bishop => PieceKind::Bishop,
+            san_rs::Piece::Rook => PieceKind::Rook,
+            san_rs::Piece::Queen => PieceKind::Queen,
+            san_rs::Piece::King => PieceKind::King
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub struct Piece {
     pub color: Color,       // white or black
     pub position: Position, // its position on the board
