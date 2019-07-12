@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 termcolor = "1"
-san-rs = "^0.2"
+san-rs = "^0.3"
 fen = "0"
 
 [[bin]]

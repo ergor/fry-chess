@@ -2,6 +2,7 @@
 pub mod piece_defs;
 
 use super::math::*;
+use san_rs::{Move, MoveKind};
 
 /* BOARD ***********************************************************************
  */
@@ -61,6 +62,10 @@ impl Board{
 
     pub fn piece_at(&self, pos: Position) -> Option<&Piece> {
         self.squares[pos.y][pos.x].as_ref()
+    }
+
+    pub fn owned_piece_at(&self, pos: Position) -> Option<Piece> {
+        self.squares[pos.y][pos.x]
     }
 
     pub fn pieces<'a>(&'a self) -> PieceIterator<'a> {
@@ -149,6 +154,30 @@ impl Board{
             .filter_map(|e| convert_piece(e))
             .for_each(|p| board.insert_mut(p));
         return board;
+    }
+
+    pub fn try_san_move(&self, mov: Move) -> Option<Board> {
+        match mov.move_kind {
+            MoveKind::Normal(src, dst) => {
+                //for moving_piece in starter_board.pieces().filter(|p| {p.color == Color::White}) {
+                //    for board in starter_board.generate(moving_piece) {
+                //        print_board(&board);
+                //    }
+                //}
+                let landing_sq = Position::new(dst.x.unwrap(), dst.y.unwrap());
+                let potential = self.pieces()
+                    .filter(|piece| src.x.map_or(true, |x| piece.position.x == x))
+                    .filter(|piece| src.y.map_or(true, |y| piece.position.y == y))
+                    .flat_map(|piece| self.generate(piece))
+                    .filter_map(|board| board.piece_at(landing_sq).cloned());
+                if potential.len() == 1 {
+                    return Some(potential);
+                }
+            },
+            MoveKind::Castle(side) => {
+                None
+            }
+        }
     }
 }
 

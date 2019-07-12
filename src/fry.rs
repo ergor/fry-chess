@@ -19,7 +19,7 @@ use std::io::Write;
 use std::io::BufRead;
 use std::fs::File;
 
-use san_rs::Move;
+use san_rs::{Move, MoveKind};
 use fen::BoardState;
 use termcolor::{ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -49,32 +49,39 @@ fn main() {
     let mut i = 0;
     loop {
         println!("ply: {}, move: {}", i+1, (i/2) + 1);
-        let mov = player_move();
-        if let Err(e) = mov {
-            println!("invalid input");
-            continue;
+
+        match player_input() {
+            Ok(input) => {
+                match Move::parse(&input) {
+                    Ok(mov) => {
+                        println!("{:?}", mov);
+                        if let Some(board) = starter_board.try_san_move(mov) {
+                            i += 1;
+                        }
+                    },
+                    Err(err) => println!("{:?}", err)
+                }                
+            },
+            Err(err) => {
+                println!("invalid input ({})", err);
+                continue;
+            }
         }
-        let mov = Move::parse(&mov.unwrap());
-        println!("{:?}", mov);
-
-        i += 1;
     }
-
     //for moving_piece in starter_board.pieces().filter(|p| {p.color == Color::White}) {
     //    for board in starter_board.generate(moving_piece) {
     //        print_board(&board);
     //    }
     //}
-
-
 }
 
-fn player_move() -> io::Result<String> {
+
+fn player_input() -> io::Result<String> {
     print!("player> ");
     io::stdout().flush() ?;
     let mut input = String::new();
     io::stdin().read_line(&mut input) ?;
-    input.pop();
+    input.pop(); // discard newline
     Ok(input)
 }
 
