@@ -1,4 +1,5 @@
 .vscode
+.idea
 *.o
 fry
 GPATH
