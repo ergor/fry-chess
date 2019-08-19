@@ -10,8 +10,23 @@ const DIRECTIONS: [Vector; DIRS_SZ] = [
     Vector {x: 1, y:-1},
 ];
 
+const ONE_STEP_WHITE: [[Vector; MAX_MOVES]; 1] = [
+    pad_vector!(Vector {x: 0, y:-1})
+];
+const ONE_STEP_BLACK: [[Vector; MAX_MOVES]; 1] = [
+    pad_vector!(Vector {x: 0, y: 1})
+];
+
 pub fn generator(board: &Board, piece: &Piece) -> Vec<Position> {
-    Vec::new()
+    // idea: conditionally pass vectors to generator function
+    // based on conditions calculated in this function
+
+    let one_step = match piece.color {
+        Color::White => ONE_STEP_WHITE,
+        Color::Black => ONE_STEP_BLACK
+    };
+    generate(board, &one_step, piece)
+    //Vec::new()
 }
 
 // fn vector_iterator(iterator: &mut BoardGenerator) -> Option<Vector> {
