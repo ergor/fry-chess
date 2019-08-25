@@ -2,6 +2,8 @@ package st.netb.chess.lib;
 
 import java.awt.Point;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -46,6 +48,18 @@ public class Fen {
     /**
      */
     public Fen(String fenString) throws FenException {
+
+        Pattern pattern = Pattern.compile(
+                "^([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8}) ([wb]) ([kq]{1,4}|-) ([a-h][1-8]|-) (\\d) (\\d)$",
+                Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(fenString);
+
+        if (matcher.matches()) {
+
+        }
+        else {
+
+        }
         List<String> parts = Arrays.stream(fenString.split(" "))
                 .map(String::trim)
                 .collect(Collectors.toList());
