@@ -1,7 +1,6 @@
 .vscode
 .idea
 *.o
-fry
 GPATH
 GRTAGS
 GTAGS
