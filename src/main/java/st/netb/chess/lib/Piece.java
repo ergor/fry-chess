@@ -2,11 +2,17 @@ package st.netb.chess.lib;
 
 import java.awt.*;
 
-public class Piece {
+public abstract class Piece {
 
     private Kind kind;
     private Color color;
     private Point position;
+
+    public Piece(Kind kind, Color color, Point position) {
+        this.kind = kind;
+        this.color = color;
+        this.position = position;
+    }
 
     public enum Kind {
         PAWN,
@@ -20,12 +26,6 @@ public class Piece {
     public enum Color {
         WHITE,
         BLACK
-    }
-
-    public Piece(Kind kind, Color color, Point position) {
-        this.kind = kind;
-        this.color = color;
-        this.position = position;
     }
 
     public Kind getKind() {
