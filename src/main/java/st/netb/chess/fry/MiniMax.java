@@ -1,23 +1,18 @@
-package st.netb.chess.lib;
+package st.netb.chess.fry;
 
-import st.netb.chess.fry.Board;
-import st.netb.chess.fry.Evaluator;
 import st.netb.chess.fry.piece.Piece;
 
-import java.util.ArrayList;
+import java.util.List;
 
 class MiniMax{
 
-    public MiniMax(){
-
-    }
     private int depth = 5;
     private Evaluator eval = new Evaluator();
-    private Generator generator;
+    private BoardGenerator generator = new BoardGenerator();
 
 
-    public Move getGoodMove(Board board){
-        ArrayList<Board> boards = generator.getBoards(board);
+    public Board getGoodMove(Board board){
+        List<Board> boards = generator.getBoards(board);
         Board bestMove = boards.get(0);
         int valueBestBoard = (board.getTurn() == Piece.Color.WHITE) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
@@ -29,7 +24,7 @@ class MiniMax{
             };
         }
 
-        return generator.getMoveFromBoard(bestMove);
+        return bestMove;
     }
     private boolean isBest(int value, int compareTo, boolean isWhite){
         return (isWhite) ? value > compareTo : value < compareTo;
@@ -38,7 +33,7 @@ class MiniMax{
 
     private int minimax(Board board, int depth, int alpha, int beta, boolean isMax){
         int value;
-        if(depth == 0 || generator.getBoards(board).length == 0){//or node is terminal
+        if(depth == 0 || generator.getBoards(board).size() == 0){//or node is terminal
             return eval.evaluateBoard(board);
         }
         if(isMax){
