@@ -9,10 +9,10 @@ public class Board {
 	private Check check;
 	private Point enPassant;
 	private int score;
-	private Fen.CastlingMoves castlingMoves;
+	private Fen.CastlingMoves[] castlingMoves;
 	private Turn turn;
 
-	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, Fen.CastlingMoves castlingMoves, Turn turn) {
+	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, Fen.CastlingMoves[] castlingMoves, Turn turn) {
 		this.pieces = pieces;
 		this.check = check;
 		this.enPassant = enPassant;
@@ -76,16 +76,20 @@ public class Board {
 		this.score = score;
 	}
 
-	public Fen.CastlingMoves getCastlingMoves() {
+	public Fen.CastlingMoves[] getCastlingMoves() {
 		return castlingMoves;
 	}
 
-	public void setCastlingMoves(Fen.CastlingMoves castlingMoves) {
+	public void setCastlingMoves(Fen.CastlingMoves[] castlingMoves) {
 		this.castlingMoves = castlingMoves;
 	}
 
-	public static Board getStartingBoard() {
-		return new Board(null , null, null, 0, null, null);
+	public static Board getStartingBoard() throws FenException {
+		return Fen.getBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 	}
 
+	@Override
+	public String toString() {
+		return pieces.values().toString();
+	}
 }
