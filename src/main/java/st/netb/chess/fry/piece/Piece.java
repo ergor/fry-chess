@@ -47,17 +47,17 @@ public abstract class Piece {
         Point position = libPiece.getPosition();
         switch (libPiece.getKind()) {
             case PAWN:
-                return new Pawn(Kind.PAWN, color, position);
+                return new Pawn(color, position);
             case BISHOP:
-                return new Bishop(Kind.PAWN, color, position);
+                return new Bishop(color, position);
             case KNIGHT:
-                return new Knight(Kind.PAWN, color, position);
+                return new Knight(color, position);
             case ROOK:
-                return new Rook(Kind.PAWN, color, position);
+                return new Rook(color, position);
             case QUEEN:
-                return new Queen(Kind.PAWN, color, position);
+                return new Queen(color, position);
             case KING:
-                return new King(Kind.PAWN, color, position);
+                return new King(color, position);
             default:
                 throw new IllegalStateException("piece kind was exhausted");
         }
@@ -107,4 +107,10 @@ public abstract class Piece {
         int newY = (int) ((int) position.getY() + movement.getY());
         return new Point(newX, newY);
     }
+
+    public boolean isNewPositionOccupiedEnemy(Point movement, Board board) {
+        Point newPosition = getNewPositionAfterMovement(movement);
+        return board.getPiece(newPosition) != null && !board.getPiece(newPosition).getColor().equals(color);
+    }
+
 }

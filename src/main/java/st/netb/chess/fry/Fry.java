@@ -3,6 +3,7 @@ package st.netb.chess.fry;
 
 import st.netb.chess.fry.piece.Piece;
 import st.netb.chess.lib.FenException;
+import st.netb.chess.lib.San;
 
 import java.util.Scanner;
 
@@ -34,7 +35,7 @@ public class Fry {
 
 	private static void doMove(String input) {
 		// stuff;
-
+		San san = new San(input);
 		board = board;
 	}
 

@@ -1,6 +1,6 @@
 package st.netb.chess.lib;
 
-import st.netb.chess.lib.piece.Piece;
+import st.netb.chess.lib.Piece;
 
 import java.awt.Point;
 import java.util.*;
