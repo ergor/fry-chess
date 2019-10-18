@@ -1,6 +1,6 @@
 package st.netb.chess.lib.piece;
 
-import st.netb.chess.lib.Board;
+import st.netb.chess.fry.Board;
 
 import java.awt.*;
 import java.util.List;
@@ -67,7 +67,7 @@ public abstract class Piece {
 
     public boolean isNewPositionOccupiedSameColor(Point movement, Board board) {
         Point newPosition = getNewPositionAfterMovement(movement);
-        return board.getPiece(newPosition) != null && board.getPiece(newPosition).getColor() == color;
+        return board.getPiece(newPosition) != null && board.getPiece(newPosition).getColor().equals(color);
     }
 
     public Point getNewPositionAfterMovement(Point movement) {

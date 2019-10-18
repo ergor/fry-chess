@@ -1,6 +1,6 @@
 package st.netb.chess.lib.piece;
 
-import st.netb.chess.lib.Board;
+import st.netb.chess.fry.Board;
 
 import java.awt.*;
 import java.util.ArrayList;
