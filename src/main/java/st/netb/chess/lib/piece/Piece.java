@@ -65,9 +65,9 @@ public abstract class Piece {
         return true;
     }
 
-    public boolean isNewPositionOccupied(Point movement, Board board) {
+    public boolean isNewPositionOccupiedSameColor(Point movement, Board board) {
         Point newPosition = getNewPositionAfterMovement(movement);
-        return board.getPiece(newPosition) != null;
+        return board.getPiece(newPosition) != null && board.getPiece(newPosition).getColor() == color;
     }
 
     public Point getNewPositionAfterMovement(Point movement) {
