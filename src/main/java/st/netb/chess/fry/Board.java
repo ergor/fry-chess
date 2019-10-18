@@ -4,8 +4,12 @@ import st.netb.chess.lib.Fen;
 import st.netb.chess.lib.FenException;
 import st.netb.chess.lib.Piece;
 
-import java.awt.*;
+
+import java.awt.Point;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Board {
 
@@ -13,10 +17,10 @@ public class Board {
 	private Check check;
 	private Point enPassant;
 	private int score;
-	private Fen.CastlingMoves[] castlingMoves;
-	private Turn turn;
+	private List<Fen.CastlingMoves> castlingMoves;
+	private Piece.Color turn;
 
-	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, Fen.CastlingMoves[] castlingMoves, Turn turn) {
+	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, List<Fen.CastlingMoves> castlingMoves, Piece.Color turn) {
 		this.pieces = pieces;
 		this.check = check;
 		this.enPassant = enPassant;
@@ -25,11 +29,11 @@ public class Board {
 		this.turn = turn;
 	}
 
-	public Turn getTurn() {
+	public Piece.Color getTurn() {
 		return turn;
 	}
 
-	public void setTurn(Turn turn) {
+	public void setTurn(Piece.Color turn) {
 		this.turn = turn;
 	}
 
@@ -80,16 +84,23 @@ public class Board {
 		this.score = score;
 	}
 
-	public Fen.CastlingMoves[] getCastlingMoves() {
+	public List<Fen.CastlingMoves> getCastlingMoves() {
 		return castlingMoves;
 	}
 
-	public void setCastlingMoves(Fen.CastlingMoves[] castlingMoves) {
+	public void setCastlingMoves(List<Fen.CastlingMoves> castlingMoves) {
 		this.castlingMoves = castlingMoves;
 	}
 
 	public static Board getStartingBoard() throws FenException {
-		return Fen.getBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+		Fen fen = new Fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+		return new Board(
+				fen.getPieces().stream().collect(Collectors.toMap(Piece::getPosition, Function.identity())),
+				Check.NO_CHECK,
+				fen.getEnPassant(),
+				0,
+				fen.getCastlingAvailability(),
+				fen.getActiveColor());
 	}
 
 	@Override
