@@ -86,7 +86,7 @@ public class Fen {
                 CastlingMoves.KINGSIDE_BLACK,
                 CastlingMoves.QUEENSIDE_WHITE,
                 CastlingMoves.QUEENSIDE_BLACK
-        }, Board.Turn.WHITE);
+        }, Piece.Color.WHITE);
     }
 
     /**

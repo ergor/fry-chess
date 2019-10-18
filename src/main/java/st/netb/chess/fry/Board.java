@@ -92,8 +92,8 @@ public class Board {
 
 		StringBuilder sb = new StringBuilder();
 
-		for (int rank = 0; rank < 8; rank++) {
-			sb.append(String.format(" %d | ", rank));
+		for (int rank = 7; rank >= 0; rank--) {
+			sb.append(String.format(" %d | ", rank+1));
 			for (int file = 0; file < 8; file++) {
 				Point p = new Point(file, rank);
 				Piece piece = getPiece(p);
@@ -123,9 +123,10 @@ public class Board {
 			sb.append("\n");
 		}
 
-		sb.append("      ");
+		sb.append("     ");
+		String files = "abcdefgh";
 		for (int file = 0; file < 8; file++) {
-			sb.append(String.format(" %d ", file));
+			sb.append(String.format(" %c ", files.toCharArray()[file]));
 		}
 		sb.append("\n");
 
