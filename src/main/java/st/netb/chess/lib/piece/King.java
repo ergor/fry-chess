@@ -32,7 +32,7 @@ public class King extends Piece {
 		allowedMovements
 				.stream()
 				.forEach(pm -> {
-					if (!isOutOfBoard(pm) && !isNewPositionOccupied(pm, board))
+					if (!isOutOfBoard(pm) && !isNewPositionOccupiedSameColor(pm, board))
 						possiblePositions.add(getNewPositionAfterMovement(pm));
 				});
 		return allowedMovements;
