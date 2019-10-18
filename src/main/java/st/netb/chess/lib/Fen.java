@@ -1,11 +1,9 @@
 package st.netb.chess.lib;
 
-import st.netb.chess.fry.Board;
+import st.netb.chess.lib.piece.Piece;
 
 import java.awt.Point;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -48,16 +46,16 @@ public class Fen {
     }
 
 
-    public static Board getBoard(String fenString) throws FenException {
+    public Fen(String fenString) throws FenException {
         // rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1
         String[] fenParts = fenString.split(" ");
 
         if(fenParts.length != 6) throw new FenException(fenString);
 
         String fenPositions = fenParts[0];
-        String fenTurn = fenParts[1];
-        String fenCastleMoves = fenParts[2];
-        String fenEnPassant = fenParts[3];
+        Piece.Color fenTurn = colorMap.get(fenParts[1]);
+        String fenCastleMoves = fenParts[2]; // TODO
+        String fenEnPassant = fenParts[3]; // TODO
 
         Map<Point, Piece> pointPieceMap = new HashMap<>();
 
@@ -81,42 +79,76 @@ public class Fen {
             posY--;
         }
 
-        return new Board(pointPieceMap, Board.Check.NO_CHECK, null, 0, new Fen.CastlingMoves[] {
+        this.pieces = new ArrayList<>(pointPieceMap.values());
+        this.activeColor = fenTurn;
+        this.castlingAvailability = Arrays.asList(
                 CastlingMoves.KINGSIDE_WHITE,
                 CastlingMoves.KINGSIDE_BLACK,
                 CastlingMoves.QUEENSIDE_WHITE,
                 CastlingMoves.QUEENSIDE_BLACK
-        }, Board.Turn.WHITE);
+        );
+        this.enPassant = null; // TODO
+        this.fullmoveClock = 0; // TODO
+        this.halfmoveClock = 1; // TODO
     }
+
+    public List<Piece> getPieces() {
+        return pieces;
+    }
+
+    public Piece.Color getActiveColor() {
+        return activeColor;
+    }
+
+    public List<CastlingMoves> getCastlingAvailability() {
+        return castlingAvailability;
+    }
+
+    public Point getEnPassant() {
+        return enPassant;
+    }
+
+    public int getHalfmoveClock() {
+        return halfmoveClock;
+    }
+
+    public int getFullmoveClock() {
+        return fullmoveClock;
+    }
+
+
+
+
+
 
     /**
      */
-    public Fen(String fenString) throws FenException {
-
-        Pattern pattern = Pattern.compile(
-                "^([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8}) ([wb]) ([kq]{1,4}|-) ([a-h][1-8]|-) (\\d) (\\d)$",
-                Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(fenString);
-
-        if (matcher.matches()) {
-
-        }
-        else {
-
-        }
-        List<String> parts = Arrays.stream(fenString.split(" "))
-                .map(String::trim)
-                .collect(Collectors.toList());
-
-        try {
-            pieces = parsePieces(parts.get(0));
-            activeColor = parseActiveColor(parts.get(1));
-            castlingAvailability = parseCastlingAvailability(parts.get(2));
-        }
-        catch (Exception e) {
-            throw new FenException("failed to parse fen", e);
-        }
-    }
+//    public Fen(String fenString) throws FenException {
+//
+//        Pattern pattern = Pattern.compile(
+//                "^([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8})\\/([rnbqkp1-8]{1,8}) ([wb]) ([kq]{1,4}|-) ([a-h][1-8]|-) (\\d) (\\d)$",
+//                Pattern.CASE_INSENSITIVE);
+//        Matcher matcher = pattern.matcher(fenString);
+//
+//        if (matcher.matches()) {
+//
+//        }
+//        else {
+//
+//        }
+//        List<String> parts = Arrays.stream(fenString.split(" "))
+//                .map(String::trim)
+//                .collect(Collectors.toList());
+//
+//        try {
+//            pieces = parsePieces(parts.get(0));
+//            activeColor = parseActiveColor(parts.get(1));
+//            castlingAvailability = parseCastlingAvailability(parts.get(2));
+//        }
+//        catch (Exception e) {
+//            throw new FenException("failed to parse fen", e);
+//        }
+//    }
 
     private List<CastlingMoves> parseCastlingAvailability(String castlingString) {
         return null;
