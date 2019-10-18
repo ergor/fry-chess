@@ -16,6 +16,8 @@ public class King extends Piece {
 		super(Kind.KING, color, position);
 	}
 
+
+	//castling not included
 	@Override
 	public List<Point> allPossibleMoves(Board board) {
 
@@ -35,6 +37,6 @@ public class King extends Piece {
 					if (!isOutOfBoard(pm) && !isNewPositionOccupiedSameColor(pm, board))
 						possiblePositions.add(getNewPositionAfterMovement(pm));
 				});
-		return allowedMovements;
+		return possiblePositions;
 	}
 }

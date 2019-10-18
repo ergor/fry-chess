@@ -75,4 +75,9 @@ public abstract class Piece {
         int newY = (int) ((int) position.getY() + movement.getY());
         return new Point(newX, newY);
     }
+
+    public boolean isNewPositionOccupiedEnemy(Point movement, Board board) {
+        Point newPosition = getNewPositionAfterMovement(movement);
+        return board.getPiece(newPosition) != null && !board.getPiece(newPosition).getColor().equals(color);
+    }
 }
