@@ -2,7 +2,7 @@ package st.netb.chess.lib;
 
 import java.awt.*;
 
-public abstract class Piece {
+public class Piece {
 
     private Kind kind;
     private Color color;
