@@ -1,4 +1,8 @@
-package main.java.st.netb.chess.lib;
+package st.netb.chess.lib;
+
+import st.netb.chess.fry.Board;
+import st.netb.chess.fry.Evaluator;
+import st.netb.chess.fry.piece.Piece;
 
 import java.util.ArrayList;
 
@@ -8,18 +12,18 @@ class MiniMax{
 
     }
     private int depth = 5;
-    private Evaluator eval;
+    private Evaluator eval = new Evaluator();
     private Generator generator;
 
 
     public Move getGoodMove(Board board){
         ArrayList<Board> boards = generator.getBoards(board);
         Board bestMove = boards.get(0);
-        int valueBestBoard = (board.isWhiteMove()) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        int valueBestBoard = (board.getTurn() == Piece.Color.WHITE) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
         for(Board b: boards) {
-            int val = minimax(b, this.depth, b.isWhiteMove());
-            if(isBest(val, valueBestBoard, b.isWiteMove())){
+            int val = minimax(b, this.depth, Integer.MIN_VALUE, Integer.MIN_VALUE, b.getTurn() == Piece.Color.WHITE);
+            if(isBest(val, valueBestBoard, b.getTurn() == Piece.Color.WHITE)){
                 valueBestBoard = val;
                 bestMove = b;
             };
@@ -32,21 +36,29 @@ class MiniMax{
     }
 
 
-    private int minimax(Board board, int depth, boolean isMax){
-        int value = 0;
+    private int minimax(Board board, int depth, int alpha, int beta, boolean isMax){
+        int value;
         if(depth == 0 || generator.getBoards(board).length == 0){//or node is terminal
-            return eval.eval(board);
+            return eval.evaluateBoard(board);
         }
         if(isMax){
             value = Integer.MIN_VALUE;
             for(Board childBoard: generator.getBoards(board)){
-                value = Math.max(minimax(childBoard, depth -1, false), value);
+                value = Math.max(minimax(childBoard, depth -1, alpha, beta, false), value);
+                alpha = Math.max(value, alpha);
+                if(alpha >= beta){
+                    break;
+                }
             }
         }
         else{
             value = Integer.MAX_VALUE;
             for(Board childBoard: generator.getBoards(board)){
-                value = Math.min(minimax(childBoard, depth -1, true), value);
+                value = Math.min(minimax(childBoard, depth -1, alpha, beta, true), value);
+                alpha = Math.min(value, alpha);
+                if(alpha >= beta){//Should this be opposite
+                    break;
+                }
             }
         }
 
