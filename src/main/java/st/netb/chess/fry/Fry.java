@@ -2,6 +2,7 @@
 package st.netb.chess.fry;
 
 import st.netb.chess.lib.FenException;
+import st.netb.chess.lib.Piece;
 
 import java.util.Scanner;
 
@@ -15,8 +16,8 @@ public class Fry {
 			board = Board.getStartingBoard();
 			while(true) {
 				System.out.println(board.toString());
-				Board.Turn turn = board.getTurn();
-				if(turn == Board.Turn.WHITE) {
+				Piece.Color turn = board.getTurn();
+				if(turn == Piece.Color.WHITE) {
 					System.out.println("White to Move: ");
 				} else {
 					System.out.println("Black to Move: ");
