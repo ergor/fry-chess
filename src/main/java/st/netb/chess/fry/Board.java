@@ -14,9 +14,9 @@ public class Board {
 	private Point enPassant;
 	private int score;
 	private Fen.CastlingMoves[] castlingMoves;
-	private Turn turn;
+	private Piece.Color turn;
 
-	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, Fen.CastlingMoves[] castlingMoves, Turn turn) {
+	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, Fen.CastlingMoves[] castlingMoves, Piece.Color turn) {
 		this.pieces = pieces;
 		this.check = check;
 		this.enPassant = enPassant;
@@ -25,11 +25,11 @@ public class Board {
 		this.turn = turn;
 	}
 
-	public Turn getTurn() {
+	public Piece.Color getTurn() {
 		return turn;
 	}
 
-	public void setTurn(Turn turn) {
+	public void setTurn(Piece.Color turn) {
 		this.turn = turn;
 	}
 
@@ -37,11 +37,6 @@ public class Board {
 		WHITE_CHECK,
 		BLACK_CHECK,
 		NO_CHECK
-	}
-
-	public enum Turn {
-		WHITE,
-		BLACK
 	}
 
 	public Piece getPiece(Point position) {
