@@ -34,6 +34,7 @@ public class Fry {
 
 	private static void doMove(String input) {
 		// stuff;
+
 		board = board;
 	}
 
