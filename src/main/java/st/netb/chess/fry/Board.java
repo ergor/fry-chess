@@ -1,4 +1,7 @@
-package st.netb.chess.lib;
+package st.netb.chess.fry;
+
+import st.netb.chess.lib.Fen;
+import st.netb.chess.lib.Piece;
 
 import java.awt.*;
 import java.util.Map;
@@ -90,6 +93,46 @@ public class Board {
 
 	@Override
 	public String toString() {
-		return pieces.values().toString();
+
+		StringBuilder sb = new StringBuilder();
+
+		for (int rank = 0; rank < 8; rank++) {
+			sb.append(String.format(" %d | ", rank));
+			for (int file = 0; file < 8; file++) {
+				Point p = new Point(file, rank);
+				Piece piece = getPiece(p);
+
+				char symbol = '.';
+				if (piece != null) {
+					switch (piece.getKind()) {
+						case PAWN:
+							symbol = 'p'; break;
+						case BISHOP:
+							symbol = 'b'; break;
+						case KNIGHT:
+							symbol = 'n'; break;
+						case ROOK:
+							symbol = 'r'; break;
+						case QUEEN:
+							symbol = 'q'; break;
+						case KING:
+							symbol = 'k'; break;
+					}
+					if (piece.getColor() == Piece.Color.WHITE) {
+						symbol = Character.toUpperCase(symbol);
+					}
+				}
+				sb.append(String.format(" %c ", symbol));
+			}
+			sb.append("\n");
+		}
+
+		sb.append("      ");
+		for (int file = 0; file < 8; file++) {
+			sb.append(String.format(" %d ", file));
+		}
+		sb.append("\n");
+
+		return sb.toString();
 	}
 }
