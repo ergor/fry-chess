@@ -1,5 +1,7 @@
 package st.netb.chess.lib;
 
+import st.netb.chess.fry.Board;
+
 import java.awt.Point;
 import java.util.*;
 import java.util.regex.Matcher;
