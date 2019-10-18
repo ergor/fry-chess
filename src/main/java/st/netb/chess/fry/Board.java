@@ -43,11 +43,6 @@ public class Board {
 		NO_CHECK
 	}
 
-	public enum Turn {
-		WHITE,
-		BLACK
-	}
-
 	public Piece getPiece(Point position) {
 		return pieces.get(position);
 	}
