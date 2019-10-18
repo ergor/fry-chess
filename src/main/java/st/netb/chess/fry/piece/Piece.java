@@ -113,4 +113,32 @@ public abstract class Piece {
         return board.getPiece(newPosition) != null && !board.getPiece(newPosition).getColor().equals(color);
     }
 
+    public Piece getClone(){
+        try {
+            return (Piece) this.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        Point newPoint = new Point(this.position.x, this.position.y);
+       switch (this.kind) {
+           case PAWN:
+               return new Pawn(this.color, newPoint);
+           case BISHOP:
+               return new Bishop(this.color, newPoint);
+           case KNIGHT:
+               return new Knight(this.color, newPoint);
+           case ROOK:
+               return new Rook(this.color, newPoint);
+           case QUEEN:
+               return new Queen(this.color, newPoint);
+           case KING:
+               return new King(this.color, newPoint);
+           default:
+               throw new IllegalStateException("Kinds was exhausted");
+       }
+    }
 }
