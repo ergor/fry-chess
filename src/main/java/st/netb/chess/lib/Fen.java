@@ -1,5 +1,7 @@
 package st.netb.chess.lib;
 
+import st.netb.chess.fry.Board;
+
 import java.awt.Point;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -43,6 +45,48 @@ public class Fen {
         KINGSIDE_BLACK,
         QUEENSIDE_WHITE,
         QUEENSIDE_BLACK
+    }
+
+
+    public static Board getBoard(String fenString) throws FenException {
+        // rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1
+        String[] fenParts = fenString.split(" ");
+
+        if(fenParts.length != 6) throw new FenException(fenString);
+
+        String fenPositions = fenParts[0];
+        String fenTurn = fenParts[1];
+        String fenCastleMoves = fenParts[2];
+        String fenEnPassant = fenParts[3];
+
+        Map<Point, Piece> pointPieceMap = new HashMap<>();
+
+        int posY = 7;
+        for(String rank : fenPositions.split("/")) {
+            int posX = 0;
+            for(char piece : rank.toCharArray()) {
+                if(Character.isDigit(piece)) {
+                    posX = posX + Integer.parseInt(String.valueOf(piece));
+                    continue;
+                }
+                Piece.Color color = Character.isUpperCase(piece)
+                        ? Piece.Color.WHITE
+                        : Piece.Color.BLACK;
+
+                Point pos = new Point(posX, posY);
+
+                pointPieceMap.putIfAbsent(pos, new Piece(pieceKindMap.get(Character.toLowerCase(piece)), color, pos));
+                posX++;
+            }
+            posY--;
+        }
+
+        return new Board(pointPieceMap, Board.Check.NO_CHECK, null, 0, new Fen.CastlingMoves[] {
+                CastlingMoves.KINGSIDE_WHITE,
+                CastlingMoves.KINGSIDE_BLACK,
+                CastlingMoves.QUEENSIDE_WHITE,
+                CastlingMoves.QUEENSIDE_BLACK
+        }, Board.Turn.WHITE);
     }
 
     /**
