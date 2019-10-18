@@ -1,5 +1,7 @@
 package st.netb.chess.lib;
 
+import st.netb.chess.lib.piece.Piece;
+
 import java.awt.*;
 import java.util.Map;
 
