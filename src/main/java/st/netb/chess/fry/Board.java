@@ -20,11 +20,10 @@ public class Board {
 	private List<Fen.CastlingMoves> castlingMoves;
 	private Piece.Color turn;
 
-	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, List<Fen.CastlingMoves> castlingMoves, Piece.Color turn) {
+	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, List<Fen.CastlingMoves> castlingMoves, Piece.Color turn) {
 		this.pieces = pieces;
 		this.check = check;
 		this.enPassant = enPassant;
-		this.score = score;
 		this.castlingMoves = castlingMoves;
 		this.turn = turn;
 	}
