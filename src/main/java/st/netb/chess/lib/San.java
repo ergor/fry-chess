@@ -153,11 +153,11 @@ public class San {
 
 		// If no endrank/endfile was found, then start pos found is end pos.
 		if(endRank == -1) {
-			this.endPos = new Point(startRank, startFile);
+			this.endPos = new Point(startFile, startRank);
 		} else {
 			this.startRank = startRank;
 			this.startFile = startFile;
-			this.endPos = new Point(endRank, endFile);
+			this.endPos = new Point(endFile, endRank);
 		}
 
 	}
