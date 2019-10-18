@@ -10,13 +10,23 @@ public class Board {
 	private Point enPassant;
 	private int score;
 	private Fen.CastlingMoves castlingMoves;
+	private Turn turn;
 
-	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, Fen.CastlingMoves castlingMoves) {
+	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, int score, Fen.CastlingMoves castlingMoves, Turn turn) {
 		this.pieces = pieces;
 		this.check = check;
 		this.enPassant = enPassant;
 		this.score = score;
 		this.castlingMoves = castlingMoves;
+		this.turn = turn;
+	}
+
+	public Turn getTurn() {
+		return turn;
+	}
+
+	public void setTurn(Turn turn) {
+		this.turn = turn;
 	}
 
 	public enum Check {
@@ -73,4 +83,9 @@ public class Board {
 	public void setCastlingMoves(Fen.CastlingMoves castlingMoves) {
 		this.castlingMoves = castlingMoves;
 	}
+
+	public static Board getStartingBoard() {
+		return new Board(null , null, null, 0, null, null);
+	}
+
 }
