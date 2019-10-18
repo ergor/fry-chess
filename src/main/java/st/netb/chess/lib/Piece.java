@@ -51,4 +51,9 @@ public class Piece {
     public void setPosition(Point position) {
         this.position = position;
     }
+
+    @Override
+    public String toString() {
+        return "" + getColor() + "|" + getKind() + " " + "(" + getPosition().x + ", " + getPosition().y + ")";
+    }
 }
