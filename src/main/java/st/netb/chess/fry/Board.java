@@ -1,14 +1,14 @@
 package st.netb.chess.fry;
 
+import st.netb.chess.fry.piece.Piece;
 import st.netb.chess.lib.Fen;
 import st.netb.chess.lib.FenException;
-import st.netb.chess.lib.Piece;
+
 
 
 import java.awt.Point;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Board {
@@ -90,12 +90,12 @@ public class Board {
 	public static Board getStartingBoard() throws FenException {
 		Fen fen = new Fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 		return new Board(
-				fen.getPieces().stream().collect(Collectors.toMap(Piece::getPosition, Function.identity())),
+				fen.getPieces().stream().collect(Collectors.toMap(st.netb.chess.lib.Piece::getPosition, Piece::fromLibPiece)),
 				Check.NO_CHECK,
 				fen.getEnPassant(),
 				0,
 				fen.getCastlingAvailability(),
-				fen.getActiveColor());
+				Piece.mapLibColor(fen.getActiveColor()));
 	}
 
 	@Override

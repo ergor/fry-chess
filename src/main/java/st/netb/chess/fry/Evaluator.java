@@ -1,6 +1,7 @@
 package st.netb.chess.fry;
 
-import st.netb.chess.lib.Piece;
+
+import st.netb.chess.fry.piece.Piece;
 
 public class Evaluator {
 	// https://github.com/alexandersoto/chess-bot/blob/master/chess/evaluation/SimpleEvaluator.java

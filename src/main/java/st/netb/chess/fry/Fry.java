@@ -1,8 +1,8 @@
 
 package st.netb.chess.fry;
 
+import st.netb.chess.fry.piece.Piece;
 import st.netb.chess.lib.FenException;
-import st.netb.chess.lib.Piece;
 
 import java.util.Scanner;
 
