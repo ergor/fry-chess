@@ -1,10 +1,14 @@
 package st.netb.chess.lib;
 
-import st.netb.chess.fry.Board;
-
 import java.awt.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * endPos
@@ -24,15 +28,13 @@ public class San {
 	private int startFile = -1;
 	private Point endPos;
 	private boolean isCapture;
-	private boolean isCheck;
-	private boolean isCheckmate;
 	private boolean isStalemate;
 	private boolean isEnPassant;
-	private boolean isCastling;
 	private boolean isPromotion;
 	private Piece.Kind piece;
-
-	private CastlingMoves castling;
+	private CheckKind checkKind;
+	private CastlingMove castling;
+	private Annotation annotation;
 	private Piece.Kind promotedPiece;
 
 	private static Map<Character, Piece.Kind> pieceKindMap = new HashMap<>();
@@ -46,199 +48,158 @@ public class San {
 
 	private static String fileNames = "abcdefgh";
 
-	public int getStartRank() {
-		return startRank;
+	public enum CastlingMove {
+		KINGSIDE("O-O"),
+		QUEENSIDE("O-O-O");
+
+		private String str;
+		CastlingMove(String str) {
+			this.str = str;
+		}
+
+		private static Map<String, CastlingMove> reverseMap = Arrays.stream(CastlingMove.values())
+				.collect(Collectors.toMap(val -> val.str, Function.identity()));
+
+		@Override
+		public String toString() {
+			return str;
+		}
+
+		public static CastlingMove fromString(String s) {
+			return Optional.ofNullable(reverseMap.get(s)).orElseThrow(IllegalArgumentException::new);
+		}
 	}
 
-	public void setStartRank(int startRank) {
-		this.startRank = startRank;
+	public enum CheckKind {
+		CHECK("+"),
+		MATE("#");
+
+		private String str;
+		CheckKind(String str) {
+			this.str = str;
+		}
+
+		private static Map<String, CheckKind> reverseMap = Arrays.stream(CheckKind.values())
+				.collect(Collectors.toMap(val -> val.str, Function.identity()));
+
+		@Override
+		public String toString() {
+			return str;
+		}
+
+		public static CheckKind fromString(String s) {
+			return Optional.ofNullable(reverseMap.get(s)).orElseThrow(IllegalArgumentException::new);
+		}
+	}
+
+	public enum Annotation {
+		BLUNDER("??"),
+		MISTAKE("?"),
+		INTERESTING("?!"),
+		GOOD("!"),
+		BRILLIANT("!!");
+
+		private String str;
+		Annotation(String str) {
+			this.str = str;
+		}
+
+		private static Map<String, Annotation> reverseMap = Arrays.stream(Annotation.values())
+				.collect(Collectors.toMap(val -> val.str, Function.identity()));
+
+		@Override
+		public String toString() {
+			return str;
+		}
+
+		public static Annotation fromString(String s) {
+			return Optional.ofNullable(reverseMap.get(s)).orElseThrow(IllegalArgumentException::new);
+		}
+	}
+
+	private static String buildExpr(String... parts) {
+		return "^" + String.join("", parts) + "(\\+|\\#)?(\\?\\?|\\?|\\?!|!|!!)?$";
+	}
+
+	private static boolean isNotEmpty(String s) {
+		return s != null && s.length() > 0;
+	}
+
+	private static final Pattern castlingPattern = Pattern.compile(buildExpr("(O-O|O-O-O)"));
+	private static final Pattern pawnMovementPattern = Pattern.compile(buildExpr("([a-h])([1-8])"));
+
+	public static Optional<San> parse(String move) {
+		San san = new San();
+		Matcher matcher;
+
+		matcher = castlingPattern.matcher(move);
+		if (matcher.matches()) {
+			String castlingMove = matcher.group(1);
+			String checkKind = matcher.group(2);
+			String annotation = matcher.group(3);
+
+			san.castling = CastlingMove.fromString(castlingMove);
+			san.checkKind = isNotEmpty(checkKind) ? CheckKind.fromString(checkKind) : null;
+			san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
+			return Optional.of(san);
+		}
+
+		return Optional.empty();
+	}
+
+	public int getStartRank() {
+		return startRank;
 	}
 
 	public int getStartFile() {
 		return startFile;
 	}
 
-	public void setStartFile(int startFile) {
-		this.startFile = startFile;
-	}
-
 	public Point getEndPos() {
 		return endPos;
-	}
-
-	public void setEndPos(Point endPos) {
-		this.endPos = endPos;
-	}
-
-
-	public enum CastlingMoves {
-		KINGSIDE,
-		QUEENSIDE
-	}
-
-	public San(String sanMove) {
-		sanMove = sanMove.trim();
-		//Castling
-		if(sanMove.equals("0-0-0")) {
-			isCastling = true;
-			castling = CastlingMoves.QUEENSIDE;
-			return;
-		} else if (sanMove.equals("0-0")) {
-			isCastling = true;
-			castling = CastlingMoves.KINGSIDE;
-			return;
-		}
-
-		int startRank = -1;
-		int startFile = -1;
-		int endRank = -1;
-		int endFile = -1;
-
-		char[] sanMoveCharArray = sanMove.toCharArray();
-		for(int i = 0; i < sanMoveCharArray.length; i++) {
-			char c = sanMoveCharArray[i];
-
-			// Find type of piece.
-			if(piece == null) {
-				if(Character.isUpperCase(c)) {
-					piece = pieceKindMap.get(Character.toLowerCase(c));
-				} else {
-					piece = Piece.Kind.PAWN;
-					i--;
-				}
-				continue;
-			}
-
-			if(c == 'x') {
-				isCapture = true;
-				continue;
-			}
-
-			// Find file.
-			if(Character.isLowerCase(c)) {
-				if(startFile == -1) {
-					startFile = fileNames.indexOf(c);
-				} else {
-					endFile = fileNames.indexOf(c);
-				}
-				continue;
-			}
-
-			// Find Rank if exists
-			if(Character.isDigit(c)) {
-				if(startRank == -1 && endFile == -1) {
-					startRank = Integer.parseInt(String.valueOf(c)) - 1;
-				} else {
-					 endRank = Integer.parseInt(String.valueOf(c)) - 1;
-				}
-				continue;
-			}
-
-			if(Character.isUpperCase(c) && piece == Piece.Kind.PAWN) {
-				this.isPromotion = true;
-				this.promotedPiece = pieceKindMap.get(Character.toLowerCase(c));
-				continue;
-			}
-
-			if(c == '+' && isCheck) {
-				isCheckmate = true;
-				continue;
-			}
-
-			if(c == '+') {
-				isCheck = true;
-			}
-
-		}
-
-		// If no endrank/endfile was found, then start pos found is end pos.
-		if(endRank == -1) {
-			this.endPos = new Point(startFile, startRank);
-		} else {
-			this.startRank = startRank;
-			this.startFile = startFile;
-			this.endPos = new Point(endFile, endRank);
-		}
-
 	}
 
 	public boolean isCapture() {
 		return isCapture;
 	}
 
-	public void setCapture(boolean capture) {
-		isCapture = capture;
-	}
-
 	public boolean isCheck() {
-		return isCheck;
-	}
-
-	public void setCheck(boolean check) {
-		isCheck = check;
+		return checkKind == CheckKind.CHECK;
 	}
 
 	public boolean isCheckmate() {
-		return isCheckmate;
-	}
-
-	public void setCheckmate(boolean checkmate) {
-		isCheckmate = checkmate;
+		return checkKind == CheckKind.MATE;
 	}
 
 	public boolean isStalemate() {
 		return isStalemate;
 	}
 
-	public void setStalemate(boolean stalemate) {
-		isStalemate = stalemate;
-	}
-
 	public boolean isEnPassant() {
 		return isEnPassant;
-	}
-
-	public void setEnPassant(boolean enPassant) {
-		isEnPassant = enPassant;
-	}
-
-	public boolean isCastling() {
-		return isCastling;
-	}
-
-	public void setCastling(boolean castling) {
-		isCastling = castling;
 	}
 
 	public boolean isPromotion() {
 		return isPromotion;
 	}
 
-	public void setPromotion(boolean promotion) {
-		isPromotion = promotion;
-	}
-
 	public Piece.Kind getPiece() {
 		return piece;
 	}
 
-	public void setPiece(Piece.Kind piece) {
-		this.piece = piece;
+	public Optional<CastlingMove> getCastling() {
+		return Optional.ofNullable(castling);
 	}
 
-	public CastlingMoves getCastling() {
-		return castling;
+	public Optional<CheckKind> getCheckKind() {
+		return Optional.ofNullable(checkKind);
 	}
 
-	public void setCastling(CastlingMoves castling) {
-		this.castling = castling;
+	public Optional<Annotation> getAnnotation() {
+		return Optional.ofNullable(annotation);
 	}
 
 	public Piece.Kind getPromotedPiece() {
 		return promotedPiece;
-	}
-
-	public void setPromotedPiece(Piece.Kind promotedPiece) {
-		this.promotedPiece = promotedPiece;
 	}
 }
