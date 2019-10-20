@@ -7,12 +7,10 @@ import java.util.List;
 class MiniMax{
 
     private int depth = 5;
-    private Evaluator eval = new Evaluator();
-    private BoardGenerator generator = new BoardGenerator();
 
 
     public Board getGoodMove(Board board){
-        List<Board> boards = generator.getBoards(board);
+        List<Board> boards = BoardGenerator.getBoards(board);
         Board bestMove = boards.get(0);
         int valueBestBoard = (board.getTurn() == Piece.Color.WHITE) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
@@ -33,12 +31,12 @@ class MiniMax{
 
     private int minimax(Board board, int depth, int alpha, int beta, boolean isMax){
         int value;
-        if(depth == 0 || generator.getBoards(board).size() == 0){//or node is terminal
-            return eval.evaluateBoard(board);
+        if(depth == 0 || BoardGenerator.getBoards(board).size() == 0){//or node is terminal
+            return Evaluator.evaluateBoard(board);
         }
         if(isMax){
             value = Integer.MIN_VALUE;
-            for(Board childBoard: generator.getBoards(board)){
+            for(Board childBoard: BoardGenerator.getBoards(board)){
                 value = Math.max(minimax(childBoard, depth -1, alpha, beta, false), value);
                 alpha = Math.max(value, alpha);
                 if(alpha >= beta){
@@ -48,7 +46,7 @@ class MiniMax{
         }
         else{
             value = Integer.MAX_VALUE;
-            for(Board childBoard: generator.getBoards(board)){
+            for(Board childBoard: BoardGenerator.getBoards(board)){
                 value = Math.min(minimax(childBoard, depth -1, alpha, beta, true), value);
                 alpha = Math.min(value, alpha);
                 if(alpha >= beta){//Should this be opposite

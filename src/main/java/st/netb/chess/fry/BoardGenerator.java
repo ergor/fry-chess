@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class BoardGenerator {
 
-	public List<Board> getBoards(Board board){
+	public static List<Board> getBoards(Board board){
 		List<Board> boards = new ArrayList<>();
 		Map<Point, Piece> pieces = board.getPieces();
 		for(Point piece: pieces.keySet()){
@@ -30,15 +30,15 @@ public class BoardGenerator {
 		return boards;
 	}
 
-	public boolean isValidBoard(Board board){
+	public static boolean isValidBoard(Board board){
 		return true; //TODO implement
 	}
 
-	public Board getBoardFromPoints(Map<Point, Piece> pieces){
+	private static Board getBoardFromPoints(Map<Point, Piece> pieces){
 		return new Board(pieces, null, null, new ArrayList<>(), Piece.Color.BLACK);
 	}
 
-	public Map<Point, Piece> copyMap(Map<Point, Piece> p){
+	public static Map<Point, Piece> copyMap(Map<Point, Piece> p){
 		return p.entrySet()
 				.stream()
 				.collect(Collectors.toMap((f -> new Point(f.getKey().x, f.getKey().y)), e -> e.getValue().getClone()));
