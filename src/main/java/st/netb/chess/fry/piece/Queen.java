@@ -3,7 +3,10 @@ package st.netb.chess.fry.piece;
 import st.netb.chess.fry.Board;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Queen extends Piece {
 
@@ -17,6 +20,19 @@ public class Queen extends Piece {
 
 	@Override
 	public List<Point> allPossibleMoves(Board board) {
-		return null;
+		List<Point> allowedRookMovements = Rook.getAllowedMoves(board, this);
+		List<Point> allowedBishopMovements = Bishop.getAllowedMoves(board, this);
+		List<Point> allowedMovements = Stream.concat(allowedRookMovements.stream(), allowedBishopMovements.stream())
+				.collect(Collectors.toList());
+
+		List<Point> possiblePositions = new ArrayList<>();
+		allowedMovements
+				.stream()
+				.forEach(pm -> {
+					if (!isOutOfBoard(pm) && !isPositionFriendly(pm, board))
+						possiblePositions.add(getNewPositionAfterMovement(pm));
+				});
+
+		return possiblePositions;
 	}
 }
