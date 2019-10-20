@@ -92,7 +92,6 @@ public class Board {
 				fen.getPieces().stream().collect(Collectors.toMap(st.netb.chess.lib.Piece::getPosition, Piece::fromLibPiece)),
 				Check.NO_CHECK,
 				fen.getEnPassant(),
-				0,
 				fen.getCastlingAvailability(),
 				Piece.mapLibColor(fen.getActiveColor()));
 	}

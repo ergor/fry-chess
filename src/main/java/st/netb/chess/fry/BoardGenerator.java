@@ -1,7 +1,6 @@
 package st.netb.chess.fry;
 
 import st.netb.chess.fry.piece.Piece;
-import st.netb.chess.lib.Fen;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -15,17 +14,24 @@ public class BoardGenerator {
 	public List<Board> getBoards(Board board){
 		List<Board> boards = new ArrayList<>();
 		Map<Point, Piece> pieces = board.getPieces();
-		for(Piece piece: pieces.values()){
-			for(Point point: pieces.keySet()){
-				Map<Point, Piece> p = new HashMap<>(pieces);
-				p.remove(point);
-				p = copyMap(p);
-				p.put(point, piece);
+		for(Point piece: pieces.keySet()){
+			List<Point> moves = pieces.get(piece).allPossibleMoves(board);
+			for(Point move: moves){
+				Map<Point, Piece> mapNewBoard = new HashMap<>(pieces);
+				mapNewBoard = copyMap(mapNewBoard);
+				mapNewBoard.remove(piece);
+				mapNewBoard.put(move, pieces.get(piece));
 
-				boards.add(getBoardFromPoints(p));
+				Board newBoard = getBoardFromPoints(mapNewBoard);
+				if(isValidBoard(newBoard))
+				boards.add(newBoard);
 			}
 		}
 		return boards;
+	}
+
+	public boolean isValidBoard(Board board){
+		return true; //TODO implement
 	}
 
 	public Board getBoardFromPoints(Map<Point, Piece> pieces){
