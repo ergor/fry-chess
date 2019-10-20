@@ -44,4 +44,5 @@ public class BoardGenerator {
 				.collect(Collectors.toMap((f -> new Point(f.getKey().x, f.getKey().y)), e -> e.getValue().clone()));
 	}
 
+
 }

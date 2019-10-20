@@ -9,6 +9,7 @@ import st.netb.chess.lib.FenException;
 import java.awt.Point;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Board {
@@ -26,6 +27,7 @@ public class Board {
 		this.enPassant = enPassant;
 		this.castlingMoves = castlingMoves;
 		this.turn = turn;
+		findCheck();
 	}
 
 	public Piece.Color getTurn() {
@@ -94,6 +96,39 @@ public class Board {
 				fen.getEnPassant(),
 				fen.getCastlingAvailability(),
 				Piece.mapFromLibColor(fen.getActiveColor()));
+	}
+
+	private void findCheck(){
+		Optional<Piece> king = getPieces().values().stream().filter(e -> e.getKind() == Piece.Kind.KING && e.getColor() !=  this.getTurn()).findAny();
+		Optional<Piece> otherKing = getPieces().values().stream().filter(e -> e.getKind() == Piece.Kind.KING && e.getColor() ==  this.getTurn()).findAny();
+		Point positionKing = null;
+		Point positionOtherKing = null;
+		if(king.isPresent()){
+			positionKing = king.get().getPosition();
+		}
+		if(otherKing.isPresent()){
+			positionOtherKing = otherKing.get().getPosition();
+		}
+
+		for(Piece piece: getPieces().values()){
+			for(Point point: piece.allPossibleMoves(this)){
+				if(point.equals(positionKing)){
+					if(this.turn == Piece.Color.BLACK){
+						this.check = Check.WHITE_CHECK;
+					}else{
+						this.check = Check.BLACK_CHECK;
+					}
+					return;
+				}else if(point.equals(positionOtherKing)){
+					if(this.turn == Piece.Color.BLACK){
+						this.check = Check.BLACK_CHECK;
+					}else{
+						this.check = Check.WHITE_CHECK;
+					}
+					return;
+				}
+			}
+		}
 	}
 
 	@Override
