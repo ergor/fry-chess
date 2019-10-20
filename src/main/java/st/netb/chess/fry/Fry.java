@@ -38,5 +38,4 @@ public class Fry {
 		San san = new San(input);
 		board = board;
 	}
-
 }

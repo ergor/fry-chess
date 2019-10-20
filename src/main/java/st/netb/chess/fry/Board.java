@@ -89,11 +89,11 @@ public class Board {
 	public static Board getStartingBoard() throws FenException {
 		Fen fen = new Fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 		return new Board(
-				fen.getPieces().stream().collect(Collectors.toMap(st.netb.chess.lib.Piece::getPosition, Piece::fromLibPiece)),
+				fen.getPieces().stream().collect(Collectors.toMap(st.netb.chess.lib.Piece::getPosition, Piece::mapFromLibPiece)),
 				Check.NO_CHECK,
 				fen.getEnPassant(),
 				fen.getCastlingAvailability(),
-				Piece.mapLibColor(fen.getActiveColor()));
+				Piece.mapFromLibColor(fen.getActiveColor()));
 	}
 
 	@Override

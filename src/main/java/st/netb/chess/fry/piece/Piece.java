@@ -31,7 +31,7 @@ public abstract class Piece {
         BLACK
     }
 
-    public static Color mapLibColor(st.netb.chess.lib.Piece.Color libColor) {
+    public static Color mapFromLibColor(st.netb.chess.lib.Piece.Color libColor) {
         switch (libColor) {
             case WHITE:
                 return Color.WHITE;
@@ -42,8 +42,8 @@ public abstract class Piece {
         }
     }
 
-    public static Piece fromLibPiece(st.netb.chess.lib.Piece libPiece) {
-        Color color = mapLibColor(libPiece.getColor());
+    public static Piece mapFromLibPiece(st.netb.chess.lib.Piece libPiece) {
+        Color color = mapFromLibColor(libPiece.getColor());
         Point position = libPiece.getPosition();
         switch (libPiece.getKind()) {
             case PAWN:
@@ -97,7 +97,7 @@ public abstract class Piece {
         return true;
     }
 
-    public boolean isNewPositionOccupiedSameColor(Point movement, Board board) {
+    public boolean isPositionFriendly(Point movement, Board board) {
         Point newPosition = getNewPositionAfterMovement(movement);
         return board.getPiece(newPosition) != null && board.getPiece(newPosition).getColor().equals(color);
     }
@@ -108,7 +108,7 @@ public abstract class Piece {
         return new Point(newX, newY);
     }
 
-    public boolean isNewPositionOccupiedEnemy(Point movement, Board board) {
+    public boolean isPositionEnemy(Point movement, Board board) {
         Point newPosition = getNewPositionAfterMovement(movement);
         return board.getPiece(newPosition) != null && !board.getPiece(newPosition).getColor().equals(color);
     }

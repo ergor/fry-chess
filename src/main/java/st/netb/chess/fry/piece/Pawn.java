@@ -19,15 +19,15 @@ public class Pawn extends Piece{
 	// promoting of pawn not included
 	@Override
 	public List<Point> allPossibleMoves(Board board) {
-		Point diagonalLeft = new Point(0, 1);
+		Point diagonalLeft = new Point(-1, 1);
 		Point diagonalRight = new Point(1, 1);
 		Point oneForward = new Point (0, 1);
 		Point twoForward = new Point(0, 2);
 		List<Point> allowedMovements = new ArrayList<>();
 		allowedMovements.add(oneForward); //go forward
-		if(isNewPositionOccupiedEnemy(diagonalLeft, board))
+		if(isPositionEnemy(diagonalLeft, board))
 			allowedMovements.add(diagonalLeft); //go diagonal left
-		if(isNewPositionOccupiedEnemy(diagonalRight, board))
+		if(isPositionEnemy(diagonalRight, board))
 			allowedMovements.add(diagonalRight); //go diagonal right
 		if(getPosition().getY() == 1) // startPosition, it is possible to go two fields forward
 			allowedMovements.add(twoForward);
@@ -36,7 +36,7 @@ public class Pawn extends Piece{
 		allowedMovements
 				.stream()
 				.forEach(pm -> {
-					if (!isOutOfBoard(pm) && !isNewPositionOccupiedSameColor(pm, board))
+					if (!isOutOfBoard(pm) && !isPositionFriendly(pm, board))
 						possiblePositions.add(getNewPositionAfterMovement(pm));
 				});
 		return possiblePositions;
