@@ -41,7 +41,7 @@ public class BoardGenerator {
 	public static Map<Point, Piece> copyMap(Map<Point, Piece> p){
 		return p.entrySet()
 				.stream()
-				.collect(Collectors.toMap((f -> new Point(f.getKey().x, f.getKey().y)), e -> e.getValue().getClone()));
+				.collect(Collectors.toMap((f -> new Point(f.getKey().x, f.getKey().y)), e -> e.getValue().clone()));
 	}
 
 }
