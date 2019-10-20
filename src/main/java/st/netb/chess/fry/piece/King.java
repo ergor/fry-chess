@@ -19,7 +19,7 @@ public class King extends Piece {
 
 	//castling not included
 	@Override
-	public List<Point> allPossibleMoves(Board board) {
+	public List<Point> allPossibleLandingSquares(Board board) {
 
 		List<Point> allowedMovements = new ArrayList<>();
 		allowedMovements.add(new Point(1,0));

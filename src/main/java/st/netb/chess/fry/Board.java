@@ -27,7 +27,7 @@ public class Board {
 		this.enPassant = enPassant;
 		this.castlingMoves = castlingMoves;
 		this.turn = turn;
-		findCheck();
+//		findCheck();
 	}
 
 	public Piece.Color getTurn() {
@@ -111,7 +111,7 @@ public class Board {
 		}
 
 		for(Piece piece: getPieces().values()){
-			for(Point point: piece.allPossibleMoves(this)){
+			for(Point point: piece.allPossibleLandingSquares(this)){
 				if(point.equals(positionKing)){
 					if(this.turn == Piece.Color.BLACK){
 						this.check = Check.WHITE_CHECK;

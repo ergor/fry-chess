@@ -6,30 +6,30 @@ import java.util.List;
 
 class MiniMax{
 
-    private int depth = 5;
+    private static int depth = 5;
 
 
-    public Board getGoodMove(Board board){
+     public static Board getGoodMove(Board board){
         List<Board> boards = BoardGenerator.getBoards(board);
         Board bestMove = boards.get(0);
-        int valueBestBoard = (board.getTurn() == Piece.Color.WHITE) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        int scoreBestBoard = (board.getTurn() == Piece.Color.WHITE) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
         for(Board b: boards) {
-            int val = minimax(b, this.depth, Integer.MIN_VALUE, Integer.MIN_VALUE, b.getTurn() == Piece.Color.WHITE);
-            if(isBest(val, valueBestBoard, b.getTurn() == Piece.Color.WHITE)){
-                valueBestBoard = val;
+            int val = minimax(b, depth, Integer.MIN_VALUE, Integer.MIN_VALUE, b.getTurn() == Piece.Color.WHITE);
+            if(isBest(val, scoreBestBoard, b.getTurn() == Piece.Color.WHITE)){
+                scoreBestBoard = val;
                 bestMove = b;
+                bestMove.setScore(scoreBestBoard);
             };
         }
-
         return bestMove;
     }
-    private boolean isBest(int value, int compareTo, boolean isWhite){
+    private static boolean isBest(int value, int compareTo, boolean isWhite){
         return (isWhite) ? value > compareTo : value < compareTo;
     }
 
 
-    private int minimax(Board board, int depth, int alpha, int beta, boolean isMax){
+    private static int minimax(Board board, int depth, int alpha, int beta, boolean isMax){
         int value;
         if(depth == 0 || BoardGenerator.getBoards(board).size() == 0){//or node is terminal
             return Evaluator.evaluateBoard(board);

@@ -19,7 +19,7 @@ public class Queen extends Piece {
 	}
 
 	@Override
-	public List<Point> allPossibleMoves(Board board) {
+	public List<Point> allPossibleLandingSquares(Board board) {
 		List<Point> allowedRookMovements = Rook.getAllowedMoves(board, this);
 		List<Point> allowedBishopMovements = Bishop.getAllowedMoves(board, this);
 		List<Point> allowedMovements = Stream.concat(allowedRookMovements.stream(), allowedBishopMovements.stream())

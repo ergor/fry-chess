@@ -14,15 +14,22 @@ public class BoardGenerator {
 	public static List<Board> getBoards(Board board){
 		List<Board> boards = new ArrayList<>();
 		Map<Point, Piece> pieces = board.getPieces();
-		for(Point piece: pieces.keySet()){
-			List<Point> moves = pieces.get(piece).allPossibleMoves(board);
+		for(Point piecePosition: pieces.keySet()){
+			Piece piece = pieces.get(piecePosition);
+			if(piece.getColor() != board.getTurn()){
+				continue;
+			}
+			if((piece.getKind() == Piece.Kind.PAWN)){
+				continue;
+			}
+			List<Point> moves = pieces.get(piecePosition).allPossibleLandingSquares(board);
 			for(Point move: moves){
 				Map<Point, Piece> mapNewBoard = new HashMap<>(pieces);
 				mapNewBoard = copyMap(mapNewBoard);
-				mapNewBoard.remove(piece);
-				mapNewBoard.put(move, pieces.get(piece));
+				mapNewBoard.remove(piecePosition);
+				mapNewBoard.put(move, pieces.get(piecePosition));
 
-				Board newBoard = getBoardFromPoints(mapNewBoard);
+				Board newBoard = getBoardFromPoints(mapNewBoard, board);
 				if(isValidBoard(newBoard))
 				boards.add(newBoard);
 			}
@@ -34,8 +41,15 @@ public class BoardGenerator {
 		return true; //TODO implement
 	}
 
-	private static Board getBoardFromPoints(Map<Point, Piece> pieces){
-		return new Board(pieces, null, null, new ArrayList<>(), Piece.Color.BLACK);
+	private static Board getBoardFromPoints(Map<Point, Piece> pieces, Board board){
+		Piece.Color turn;
+		if(board.getTurn() == Piece.Color.WHITE){
+			turn = Piece.Color.BLACK;
+		}else {
+			turn = Piece.Color.WHITE;
+		}
+
+		return new Board(pieces, null, null, new ArrayList<>(), turn);
 	}
 
 	public static Map<Point, Piece> copyMap(Map<Point, Piece> p){

@@ -128,7 +128,7 @@ public class San {
 	}
 
 	private static int getRank(String rank) {
-		return rank.charAt(0) - '0';
+		return rank.charAt(0) - '1';
 	}
 
 	private static final Pattern castlingPattern = Pattern.compile(buildExpr("(O-O|O-O-O)"));
@@ -160,7 +160,7 @@ public class San {
 			String promotionPiece= matcher.group(7);
 			String enPassant = matcher.group(8);
 			String checkKind = matcher.group(9);
-			String annotation = matcher.group(10);
+			//String annotation = matcher.group(10);
 
 			san.piece = Piece.Kind.PAWN;
 			san.startFile = isNotEmpty(startFile) ? getFile(startFile) : -1;
@@ -170,8 +170,8 @@ public class San {
 			san.promotedPiece = isNotEmpty(promotionPiece) ? pieceKindMap.get(promotionPiece.charAt(0)) : null;
 			san.isEnPassant = isNotEmpty(enPassant);
 			san.checkKind = isNotEmpty(checkKind) ? CheckKind.fromString(checkKind) : null;
-			san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
-			Optional.of(san);
+			//san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
+			return Optional.of(san);
 		}
 
 		matcher = pieceMovementPattern.matcher(move);
@@ -192,6 +192,7 @@ public class San {
 			san.endPos = new Point(getFile(endFile), getRank(endRank));
 			san.checkKind = isNotEmpty(checkKind) ? CheckKind.fromString(checkKind) : null;
 			san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
+			return Optional.of(san);
 		}
 
 		return Optional.empty();

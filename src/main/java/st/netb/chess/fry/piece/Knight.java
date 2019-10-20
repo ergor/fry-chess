@@ -17,7 +17,7 @@ public class Knight extends Piece {
 	}
 
 	@Override
-	public List<Point> allPossibleMoves(Board board) {
+	public List<Point> allPossibleLandingSquares(Board board) {
 		List<Point> allowedMovements = new ArrayList<>();
 		allowedMovements.add(new Point(1, 2));
 		allowedMovements.add(new Point(1, -2));

@@ -24,12 +24,13 @@ public class Fry {
 				Piece.Color turn = board.getTurn();
 				if(turn == Piece.Color.WHITE) {
 					System.out.println("White to Move: ");
+					String inputMove = scanner.nextLine();
+					if(inputMove.toLowerCase().equals("exit")) break;
+					board = doMove(inputMove, board, turn);
 				} else {
 					System.out.println("Black to Move: ");
+					board = MiniMax.getGoodMove(board);
 				}
-				String inputMove = scanner.nextLine();
-				if(inputMove.toLowerCase().equals("exit")) break;
-				board = doMove(inputMove, board, turn);
 			}
 		} catch (FenException e) {
 			e.printStackTrace();
@@ -39,7 +40,7 @@ public class Fry {
 
 	private static Board doMove(String input, Board initialBoard, Piece.Color turn) {
 		// stuff;
-		San san = new San(input);
+		San san = San.parse(input).orElseThrow(IllegalArgumentException::new);
 		List<Point> startPositions = applySan(san, initialBoard);
 		if (startPositions.size() == 0) {
 			System.out.println("Illegal move");
@@ -52,9 +53,12 @@ public class Fry {
 		Point startPosition = startPositions.get(0);
 
 		Map<Point, Piece> pieces = initialBoard.getPieces().keySet().stream()
-				.filter(pos -> !pos.equals(startPositions))
+				.filter(pos -> !pos.equals(startPosition))
 				.collect(Collectors.toMap(Function.identity(), pos -> initialBoard.getPieces().get(pos).clone()));
-		pieces.put(san.getEndPos(), initialBoard.getPiece(startPosition));
+
+		Piece movedPiece = initialBoard.getPiece(startPosition).clone();
+		movedPiece.setPosition(san.getEndPos());
+		pieces.put(san.getEndPos(), movedPiece);
 
 		Piece.Color nextPlayer = turn == Piece.Color.WHITE ? Piece.Color.BLACK : Piece.Color.WHITE;
 
@@ -71,11 +75,12 @@ public class Fry {
 				.filter(e -> sanMove.getStartFile() < 0 || e.getKey().getX() == sanMove.getStartFile())
 				.filter(e -> sanMove.getStartRank() < 0 || e.getKey().getY() == sanMove.getStartRank())
 				.filter(e -> e.getValue().getKind() == mapFromLibKind(sanMove.getPiece()))
+				.filter(e -> e.getValue().getColor() == initialBoard.getTurn())
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 		List<Point> startPositions = new ArrayList<>();
 		for (Piece piece : candidatePieces.values()) {
-			if (piece.allPossibleMoves(initialBoard).stream()
+			if (piece.allPossibleLandingSquares(initialBoard).stream()
 					.anyMatch(pos -> pos.equals(sanMove.getEndPos()))) {
 				startPositions.add(piece.getPosition());
 			}

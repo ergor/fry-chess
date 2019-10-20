@@ -17,7 +17,7 @@ public class Rook extends Piece {
 	}
 
 	@Override
-	public List<Point> allPossibleMoves(Board board) {
+	public List<Point> allPossibleLandingSquares(Board board) {
 
 		List<Point> allowedMovements = getAllowedMoves(board, this);
 
@@ -36,6 +36,9 @@ public class Rook extends Piece {
 
 		List<Point> allowedMovements = new ArrayList<>();
 		for(int i = -7; i<=7; i++){
+			if(i == 0 ){
+				continue;
+			}
 			Point point = new Point(i, 0);
 			if(!piece.isBlocked(board, point)){
 				allowedMovements.add(point);
