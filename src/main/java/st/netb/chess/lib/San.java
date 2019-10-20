@@ -28,9 +28,7 @@ public class San {
 	private int startFile = -1;
 	private Point endPos;
 	private boolean isCapture;
-	private boolean isStalemate;
 	private boolean isEnPassant;
-	private boolean isPromotion;
 	private Piece.Kind piece;
 	private CheckKind checkKind;
 	private CastlingMove castling;
@@ -39,11 +37,11 @@ public class San {
 
 	private static Map<Character, Piece.Kind> pieceKindMap = new HashMap<>();
 	static {
-		pieceKindMap.put('b', Piece.Kind.BISHOP);
-		pieceKindMap.put('n', Piece.Kind.KNIGHT);
-		pieceKindMap.put('r', Piece.Kind.ROOK);
-		pieceKindMap.put('q', Piece.Kind.QUEEN);
-		pieceKindMap.put('k', Piece.Kind.KING);
+		pieceKindMap.put('B', Piece.Kind.BISHOP);
+		pieceKindMap.put('N', Piece.Kind.KNIGHT);
+		pieceKindMap.put('R', Piece.Kind.ROOK);
+		pieceKindMap.put('Q', Piece.Kind.QUEEN);
+		pieceKindMap.put('K', Piece.Kind.KING);
 	}
 
 	private static String fileNames = "abcdefgh";
@@ -125,8 +123,17 @@ public class San {
 		return s != null && s.length() > 0;
 	}
 
+	private static int getFile(String file) {
+		return file.charAt(0) - 'a';
+	}
+
+	private static int getRank(String rank) {
+		return rank.charAt(0) - '0';
+	}
+
 	private static final Pattern castlingPattern = Pattern.compile(buildExpr("(O-O|O-O-O)"));
-	private static final Pattern pawnMovementPattern = Pattern.compile(buildExpr("([a-h])([1-8])"));
+	private static final Pattern pawnMovementPattern = Pattern.compile(buildExpr("(([a-h]){1}([1-8])?x)?([a-h])([1-8])(=?([KQBNR]))?(?:e\\.p\\.)?"));
+	private static final Pattern pieceMovementPattern = Pattern.compile(buildExpr("([KQBNR])([a-h])?([0-9])?(x)?([a-h])([1-8])"));
 
 	public static Optional<San> parse(String move) {
 		San san = new San();
@@ -142,6 +149,49 @@ public class San {
 			san.checkKind = isNotEmpty(checkKind) ? CheckKind.fromString(checkKind) : null;
 			san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
 			return Optional.of(san);
+		}
+		matcher = pawnMovementPattern.matcher(move);
+		if(matcher.matches()){
+			String startFile = matcher.group(2);
+			String startRank = matcher.group(3);
+			String capture = matcher.group(1);
+			String endFile = matcher.group(4);
+			String endRank = matcher.group(5);
+			String promotionPiece= matcher.group(7);
+			String enPassant = matcher.group(8);
+			String checkKind = matcher.group(9);
+			String annotation = matcher.group(10);
+
+			san.piece = Piece.Kind.PAWN;
+			san.startFile = isNotEmpty(startFile) ? getFile(startFile) : -1;
+			san.startRank = isNotEmpty(startRank) ? getRank(startRank) : -1;
+			san.isCapture = isNotEmpty(capture);
+			san.endPos = new Point(getFile(endFile), getRank(endRank));
+			san.promotedPiece = isNotEmpty(promotionPiece) ? pieceKindMap.get(promotionPiece.charAt(0)) : null;
+			san.isEnPassant = isNotEmpty(enPassant);
+			san.checkKind = isNotEmpty(checkKind) ? CheckKind.fromString(checkKind) : null;
+			san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
+			Optional.of(san);
+		}
+
+		matcher = pieceMovementPattern.matcher(move);
+		if (matcher.matches()) {
+			String pieceKind = matcher.group(1);
+			String startFile = matcher.group(2);
+			String startRank = matcher.group(3);
+			String capture = matcher.group(4);
+			String endFile = matcher.group(5);
+			String endRank = matcher.group(6);
+			String checkKind = matcher.group(7);
+			String annotation = matcher.group(8);
+
+			san.piece = pieceKindMap.get(pieceKind.charAt(0));
+			san.startFile = isNotEmpty(startFile) ? getFile(startFile) : -1;
+			san.startRank = isNotEmpty(startRank) ? getRank(startRank) : -1;
+			san.isCapture = isNotEmpty(capture);
+			san.endPos = new Point(getFile(endFile), getRank(endRank));
+			san.checkKind = isNotEmpty(checkKind) ? CheckKind.fromString(checkKind) : null;
+			san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
 		}
 
 		return Optional.empty();
@@ -171,16 +221,12 @@ public class San {
 		return checkKind == CheckKind.MATE;
 	}
 
-	public boolean isStalemate() {
-		return isStalemate;
-	}
-
 	public boolean isEnPassant() {
 		return isEnPassant;
 	}
 
 	public boolean isPromotion() {
-		return isPromotion;
+		return promotedPiece != null;
 	}
 
 	public Piece.Kind getPiece() {
@@ -197,6 +243,10 @@ public class San {
 
 	public Optional<Annotation> getAnnotation() {
 		return Optional.ofNullable(annotation);
+	}
+
+	public Optional<Piece.Kind> promotedPiece() {
+		return Optional.ofNullable(promotedPiece);
 	}
 
 	public Piece.Kind getPromotedPiece() {
