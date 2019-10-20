@@ -43,9 +43,11 @@ public class Fry {
 		List<Point> startPositions = applySan(san, initialBoard);
 		if (startPositions.size() == 0) {
 			System.out.println("Illegal move");
+			return initialBoard;
 		}
 		else if (startPositions.size() > 1) {
 			System.out.println("Ambigous move");
+			return initialBoard;
 		}
 		Point startPosition = startPositions.get(0);
 
