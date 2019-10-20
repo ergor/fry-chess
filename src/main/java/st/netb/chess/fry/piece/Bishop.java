@@ -19,17 +19,7 @@ public class Bishop extends Piece {
 	@Override
 	 public List<Point> allPossibleMoves(Board board) {
 
-		List<Point> allowedMovements = new ArrayList<>();
-		for(int i = -7; i<=7; i++){
-			Point point = new Point(i, i);
-			if(!isBlocked(board, point)){
-				allowedMovements.add(point);
-			}
-			point = new Point(i, -i);
-			if(!isBlocked(board, point)){
-				allowedMovements.add(point);
-			}
-		}
+		List<Point> allowedMovements = getAllowedMoves(board, this);
 
 		List<Point> possiblePositions = new ArrayList<>();
 		allowedMovements
@@ -40,5 +30,21 @@ public class Bishop extends Piece {
 				});
 
 		return possiblePositions;
+	}
+
+	public static List<Point> getAllowedMoves(Board board, Piece piece){
+
+		List<Point> allowedMovements = new ArrayList<>();
+		for(int i = -7; i<=7; i++){
+			Point point = new Point(i, i);
+			if(!piece.isBlocked(board, point)){
+				allowedMovements.add(point);
+			}
+			point = new Point(i, -i);
+			if(!piece.isBlocked(board, point)){
+				allowedMovements.add(point);
+			}
+		}
+		return allowedMovements;
 	}
 }
