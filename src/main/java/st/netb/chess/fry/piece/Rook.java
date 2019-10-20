@@ -29,8 +29,6 @@ public class Rook extends Piece {
 			if(!isBlocked(board, point)){
 				allowedMovements.add(point);
 			}
-
-			allowedMovements.add(new Point(0, i));
 		}
 
 		List<Point> possiblePositions = new ArrayList<>();
@@ -43,4 +41,5 @@ public class Rook extends Piece {
 
 		return possiblePositions;
 	}
+
 }
