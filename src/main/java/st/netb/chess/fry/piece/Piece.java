@@ -185,16 +185,8 @@ public abstract class Piece {
         return false;
     }
 
-    public Piece getClone(){
-        try {
-            return (Piece) this.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
     @Override
-    protected Object clone() throws CloneNotSupportedException {
+    public Piece clone() {
         Point newPoint = new Point(this.position.x, this.position.y);
        switch (this.kind) {
            case PAWN:
