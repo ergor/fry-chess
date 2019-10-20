@@ -14,13 +14,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Fry {
-	public static Board board;
-
 
 	public static void main(String[] args) {
-		Scanner scanner = new Scanner(System. in);
+		Scanner scanner = new Scanner(System.in);
 		try {
-			board = Board.getStartingBoard();
+			Board board = Board.getStartingBoard();
 			while(true) {
 				System.out.println(board.toString());
 				Piece.Color turn = board.getTurn();
@@ -31,7 +29,7 @@ public class Fry {
 				}
 				String inputMove = scanner.nextLine();
 				if(inputMove.toLowerCase().equals("exit")) break;
-				doMove(inputMove);
+				board = doMove(inputMove, board, turn);
 			}
 		} catch (FenException e) {
 			e.printStackTrace();
@@ -39,7 +37,7 @@ public class Fry {
 
 	}
 
-	private static void doMove(String input, Board initialBoard, Piece.Color turn) {
+	private static Board doMove(String input, Board initialBoard, Piece.Color turn) {
 		// stuff;
 		San san = new San(input);
 		List<Point> startPositions = applySan(san, initialBoard);
@@ -59,7 +57,7 @@ public class Fry {
 		Piece.Color nextPlayer = turn == Piece.Color.WHITE ? Piece.Color.BLACK : Piece.Color.WHITE;
 
 		// TODO: initialize properly
-		board = new Board(pieces, Board.Check.NO_CHECK, null, initialBoard.getCastlingMoves(), nextPlayer);
+		return new Board(pieces, Board.Check.NO_CHECK, null, initialBoard.getCastlingMoves(), nextPlayer);
 	}
 
 
