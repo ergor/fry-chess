@@ -6,7 +6,7 @@ import java.util.List;
 
 class MiniMax{
 
-    private static int depth = 8;
+    private static int depth = 5;
 
 
      public static Board getGoodMove(Board board){
@@ -38,21 +38,23 @@ class MiniMax{
         if(isMax){
             value = Integer.MIN_VALUE;
             for(Board childBoard: boards){
-                value = Math.max(minimax(childBoard, depth -1, alpha, beta, false), value);
-                alpha = Math.max(value, alpha);
-                if(alpha >= beta){
-                    break;
+                int newValue = minimax(childBoard, depth -1, alpha, beta, false);
+                value = Math.max(newValue, value);
+                if(newValue >= beta){
+                    return value;
                 }
+                alpha = Math.max(value, alpha);
             }
         }
         else{
             value = Integer.MAX_VALUE;
             for(Board childBoard: boards){
-                value = Math.min(minimax(childBoard, depth -1, alpha, beta, true), value);
-                alpha = Math.min(value, alpha);
-                if(alpha >= beta){//Should this be opposite
-                    break;
+                int newValue = minimax(childBoard, depth -1, alpha, beta, true);
+                value = Math.min(newValue, value);
+                if(newValue >= alpha){//Should this be opposite
+                    return value;
                 }
+                alpha = Math.min(value, alpha);
             }
         }
 
