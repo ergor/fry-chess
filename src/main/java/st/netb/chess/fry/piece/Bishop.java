@@ -19,7 +19,10 @@ public class Bishop extends Piece {
 	@Override
 	 public List<Point> allPossibleLandingSquares(Board board) {
 
-		List<Point> allowedMovements = getAllowedMoves(board, this);
+		List<Point> allowedMovements = getMovesInDirection(board, Direction.upLeft);
+		allowedMovements.addAll(getMovesInDirection(board, Direction.upRight));
+		allowedMovements.addAll(getMovesInDirection(board, Direction.downLeft));
+		allowedMovements.addAll(getMovesInDirection(board, Direction.downRight));
 
 		List<Point> possiblePositions = new ArrayList<>();
 		allowedMovements
@@ -34,22 +37,4 @@ public class Bishop extends Piece {
 		return possiblePositions;
 	}
 
-	public static List<Point> getAllowedMoves(Board board, Piece piece){
-
-		List<Point> allowedMovements = new ArrayList<>();
-		for(int i = -7; i<=7; i++){
-			if(i == 0 ){
-				continue;
-			}
-			Point point = new Point(i, i);
-			if(!piece.isBlocked(board, point)){
-				allowedMovements.add(point);
-			}
-			point = new Point(i, -i);
-			if(!piece.isBlocked(board, point)){
-				allowedMovements.add(point);
-			}
-		}
-		return allowedMovements;
-	}
 }

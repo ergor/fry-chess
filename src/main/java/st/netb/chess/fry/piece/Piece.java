@@ -3,7 +3,7 @@ package st.netb.chess.fry.piece;
 import st.netb.chess.fry.Board;
 
 import java.awt.*;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -111,74 +111,40 @@ public abstract class Piece {
         return board.getPiece(newPosition) != null && !board.getPiece(newPosition).getColor().equals(color);
     }
 
-    public boolean isBlocked(Board board , Point vector){
-        Map<Point, Piece> pieces = board.getPieces();
-        boolean isX = vector.x != getPosition().x;
-        boolean isY = vector.y != getPosition().y;
-        boolean isDiagonal = isX && isY;
 
-        if(isDiagonal){
-            if(vector.x > 0 && vector.y > 0){
-                for(int i = 0; i < vector.x; i++){
-                   if(pieces.containsKey(new Point(i + getPosition().x, i + getPosition().y))){
-                       return true;
-                   }
-                }
-            }
-            else if(vector.x > 0 && vector.y < 0){
-                for(int i = 0; i < vector.x; i++){
-                    if(pieces.containsKey(new Point(i + getPosition().x, -i + getPosition().y))){
-                        return true;
-                    }
-                }
-            }
-            else if(vector.x < 0 && vector.y < 0){
-                for(int i = 0; i > vector.x; i--){
-                    if(pieces.containsKey(new Point(i + getPosition().x, i + getPosition().y))){
-                        return true;
-                    }
-                }
-            }
-            else if(vector.x < 0 && vector.y > 0){
-                for(int i = 0; i > vector.x; i--){
-                    if(pieces.containsKey(new Point(i + getPosition().x, -i + getPosition().y))){
-                        return true;
-                    }
-                }
-            }
-        }
-        else if(isX){
-            if(vector.x > 0){
-                for(int i = 0; i< vector.x; i++){
-                    if(pieces.containsKey(new Point(i + getPosition().x, vector.y + getPosition().y))){
-                        return true;
-                    }
-                }
-            }else {
-                for(int i = 0; i> vector.x; i--){
-                    if(pieces.containsKey(new Point(i + getPosition().x, vector.y + getPosition().y))){
-                        return true;
-                    }
-                }
-            }
-        }
-        else if(isY){
-            if(vector.y > 0){
-                for(int i = 0; i< vector.x; i++){
-                    if(pieces.containsKey(new Point(vector.x + getPosition().x, i + getPosition().y))){
-                        return true;
-                    }
-                }
-            }else {
-                for(int i = 0; i> vector.x; i--){
-                    if(pieces.containsKey(new Point(vector.y + getPosition().x, i + getPosition().y))){
-                        return true;
-                    }
-                }
-            }
-        }
+    public enum Direction{
+        left(new Point(-1, 0)),
+        right(new Point(1, 0)),
+        up(new Point(0, 1)),
+        down(new Point(0, -1)),
+        upLeft(new Point(-1, 1)),
+        upRight(new Point(1, 1)),
+        downLeft(new Point(-1, -1)),
+        downRight(new Point(1, -1));
 
-        return false;
+        Point vector;
+
+        Direction(Point direction) {
+            this.vector = direction;
+        }
+    }
+
+    public List<Point> getMovesInDirection(Board board, Direction direction){
+       List<Point> allowedMovements = new ArrayList<>();
+
+        for(int i = 1; i < 8; i++){
+            Point point = new Point(i*direction.vector.x, i*direction.vector.y);
+            point = getNewPositionAfterMovement(point);
+
+            if(isPositionFriendly(point, board)){
+              return allowedMovements;
+           }else if(isPositionEnemy(point, board)){
+               allowedMovements.add(point);
+               return allowedMovements;
+           }
+           allowedMovements.add(point);
+       }
+       return allowedMovements;
     }
 
     @Override
