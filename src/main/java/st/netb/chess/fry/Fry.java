@@ -26,7 +26,11 @@ public class Fry {
 					System.out.println("White to Move: ");
 					String inputMove = scanner.nextLine();
 					if(inputMove.toLowerCase().equals("exit")) break;
-					board = doMove(inputMove, board, turn);
+					try{
+						board = doMove(inputMove, board, turn);
+					}catch (IllegalArgumentException e){
+						System.out.println("Illegal argument");
+					}
 				} else {
 					System.out.println("Black to Move: ");
 					board = MiniMax.getGoodMove(board);
