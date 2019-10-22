@@ -7,6 +7,7 @@ import st.netb.chess.lib.FenException;
 
 
 import java.awt.Point;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -176,4 +177,21 @@ public class Board {
 
 		return sb.toString();
 	}
+	@Override
+	public Board clone(){
+		Map<Point, Piece> pieces = new HashMap<>();
+		Check check = this.check;
+		Point enPassant = this.enPassant;
+		int score = this.score;
+		List<Fen.CastlingMoves> castlingMoves = this.castlingMoves;
+		Piece.Color turn = this.turn;
+		for(Point point: this.pieces.keySet()){
+			Piece p = this.pieces.get(point);
+			Piece clonedPiece = p.clone();
+			pieces.put(point, clonedPiece);
+		}
+
+		return new Board(pieces, check, enPassant, castlingMoves, turn);
+	}
+
 }
