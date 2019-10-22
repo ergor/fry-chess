@@ -134,11 +134,11 @@ public abstract class Piece {
 
         for(int i = 1; i < 8; i++){
             Point point = new Point(i*direction.vector.x, i*direction.vector.y);
-            point = getNewPositionAfterMovement(point);
+            Point newPosition = getNewPositionAfterMovement(point);
 
-            if(isPositionFriendly(point, board)){
+            if(isPositionFriendly(newPosition, board)){
               return allowedMovements;
-           }else if(isPositionEnemy(point, board)){
+           }else if(isPositionEnemy(newPosition, board)){
                allowedMovements.add(point);
                return allowedMovements;
            }
