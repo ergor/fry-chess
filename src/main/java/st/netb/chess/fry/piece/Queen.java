@@ -16,10 +16,15 @@ public class Queen extends Piece {
 
 	@Override
 	public List<Point> allPossibleLandingSquares(Board board) {
-		List<Point> allowedRookMovements = Rook.getAllowedMoves(board, this);
-		List<Point> allowedBishopMovements = Bishop.getAllowedMoves(board, this);
-		List<Point> allowedMovements = Stream.concat(allowedRookMovements.stream(), allowedBishopMovements.stream())
-				.collect(Collectors.toList());
+
+		List<Point> allowedMovements = getMovesInDirection(board, Direction.left);
+		allowedMovements.addAll(getMovesInDirection(board, Direction.right));
+		allowedMovements.addAll(getMovesInDirection(board, Direction.up));
+		allowedMovements.addAll(getMovesInDirection(board, Direction.down));
+		allowedMovements.addAll(getMovesInDirection(board, Direction.upLeft));
+		allowedMovements.addAll(getMovesInDirection(board, Direction.upRight));
+		allowedMovements.addAll(getMovesInDirection(board, Direction.downLeft));
+		allowedMovements.addAll(getMovesInDirection(board, Direction.downRight));
 
 		List<Point> possiblePositions = new ArrayList<>();
 		allowedMovements

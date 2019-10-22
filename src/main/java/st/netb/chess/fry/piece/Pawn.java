@@ -34,7 +34,8 @@ public class Pawn extends Piece{
 			Point diagonalRight = new Point(1, -1);
 			Point oneForward = new Point (0, -1);
 			Point twoForward = new Point(0, -2);
-			allowedMovements.add(oneForward); //go forward
+			if(isPositionEnemy(getNewPositionAfterMovement(oneForward), board))
+				allowedMovements.add(oneForward); //go forward
 			if(isPositionEnemy(diagonalLeft, board))
 				allowedMovements.add(diagonalLeft); //go diagonal left
 			if(isPositionEnemy(diagonalRight, board))
