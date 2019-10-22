@@ -10,18 +10,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * endPos
- * piece
- * isCapture
- * isCheck
- * isCheckmate
- * isStalemate
- * isEnPassant
- * isCastle
- * isPromotion
- *
- */
 public class San {
 
 	private int startRank = -1;
@@ -43,8 +31,6 @@ public class San {
 		pieceKindMap.put('Q', Piece.Kind.QUEEN);
 		pieceKindMap.put('K', Piece.Kind.KING);
 	}
-
-	private static String fileNames = "abcdefgh";
 
 	public enum CastlingMove {
 		KINGSIDE("O-O"),
@@ -115,8 +101,8 @@ public class San {
 		}
 	}
 
-	private static String buildExpr(String... parts) {
-		return "^" + String.join("", parts) + "(\\+|\\#)?(\\?\\?|\\?|\\?!|!|!!)?$";
+	private static String buildExpr(String regexp) {
+		return "^" + regexp + "(\\+|\\#)?(\\?\\?|\\?|\\?!|!|!!)?$";
 	}
 
 	private static boolean isNotEmpty(String s) {
@@ -132,7 +118,7 @@ public class San {
 	}
 
 	private static final Pattern castlingPattern = Pattern.compile(buildExpr("(O-O|O-O-O)"));
-	private static final Pattern pawnMovementPattern = Pattern.compile(buildExpr("(([a-h]){1}([1-8])?x)?([a-h])([1-8])(=?([KQBNR]))?(?:e\\.p\\.)?"));
+	private static final Pattern pawnMovementPattern = Pattern.compile(buildExpr("(([a-h]){1}([1-8])?x)?([a-h])([1-8])(=?([KQBNR]))?(e\\.p\\.)?"));
 	private static final Pattern pieceMovementPattern = Pattern.compile(buildExpr("([KQBNR])([a-h])?([0-9])?(x)?([a-h])([1-8])"));
 
 	public static Optional<San> parse(String move) {
@@ -160,7 +146,7 @@ public class San {
 			String promotionPiece= matcher.group(7);
 			String enPassant = matcher.group(8);
 			String checkKind = matcher.group(9);
-			//String annotation = matcher.group(10);
+			String annotation = matcher.group(10);
 
 			san.piece = Piece.Kind.PAWN;
 			san.startFile = isNotEmpty(startFile) ? getFile(startFile) : -1;
@@ -168,9 +154,12 @@ public class San {
 			san.isCapture = isNotEmpty(capture);
 			san.endPos = new Point(getFile(endFile), getRank(endRank));
 			san.promotedPiece = isNotEmpty(promotionPiece) ? pieceKindMap.get(promotionPiece.charAt(0)) : null;
+			if (san.promotedPiece != null && san.endPos.y > 0 && san.endPos.y < 7) {
+			    return Optional.empty(); // can only promote on rank extrema
+            }
 			san.isEnPassant = isNotEmpty(enPassant);
 			san.checkKind = isNotEmpty(checkKind) ? CheckKind.fromString(checkKind) : null;
-			//san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
+			san.annotation = isNotEmpty(annotation) ? Annotation.fromString(annotation) : null;
 			return Optional.of(san);
 		}
 
@@ -213,21 +202,8 @@ public class San {
 	public boolean isCapture() {
 		return isCapture;
 	}
-
-	public boolean isCheck() {
-		return checkKind == CheckKind.CHECK;
-	}
-
-	public boolean isCheckmate() {
-		return checkKind == CheckKind.MATE;
-	}
-
 	public boolean isEnPassant() {
 		return isEnPassant;
-	}
-
-	public boolean isPromotion() {
-		return promotedPiece != null;
 	}
 
 	public Piece.Kind getPiece() {
