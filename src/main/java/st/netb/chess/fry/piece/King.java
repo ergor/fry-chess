@@ -30,13 +30,17 @@ public class King extends Piece {
 		allowedMovements.add(new Point(-1,1));
 		allowedMovements.add(new Point(-1,-1));
 		allowedMovements.add(new Point(1,-1));
+
 		List<Point> possiblePositions = new ArrayList<>();
 		allowedMovements
 				.stream()
-				.forEach(pm -> {
-					if (!isOutOfBoard(pm) && !isPositionFriendly(pm, board))
-						possiblePositions.add(getNewPositionAfterMovement(pm));
+				.forEach(move -> {
+					Point newPosition = getNewPositionAfterMovement(move);
+					if (!isOutOfBoard(newPosition) && !isPositionFriendly(newPosition, board)){
+						possiblePositions.add(newPosition);
+					}
 				});
+
 		return possiblePositions;
 	}
 }

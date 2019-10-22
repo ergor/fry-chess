@@ -50,10 +50,13 @@ public class Pawn extends Piece{
 		List<Point> possiblePositions = new ArrayList<>();
 		allowedMovements
 				.stream()
-				.forEach(pm -> {
-					if (!isOutOfBoard(pm))
-						possiblePositions.add(getNewPositionAfterMovement(pm));
+				.forEach(move -> {
+					Point newPosition = getNewPositionAfterMovement(move);
+					if (!isOutOfBoard(newPosition) && !isPositionFriendly(newPosition, board)){
+						possiblePositions.add(newPosition);
+					}
 				});
+
 		return possiblePositions;
 		}
 }

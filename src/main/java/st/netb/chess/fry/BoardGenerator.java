@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 public class BoardGenerator {
 
 	public static List<Board> getBoards(Board board){
+		board = board.clone();
 		List<Board> boards = new ArrayList<>();
 		Map<Point, Piece> pieces = board.getPieces();
 		for(Point piecePosition: pieces.keySet()){
@@ -19,15 +20,17 @@ public class BoardGenerator {
 			if(piece.getColor() != board.getTurn()){
 				continue;
 			}
-			if((piece.getKind() == Piece.Kind.PAWN)){
+			if((piece.getKind() == Piece.Kind.BISHOP ||piece.getKind() == Piece.Kind.QUEEN )){
 				continue;
 			}
-			List<Point> moves = pieces.get(piecePosition).allPossibleLandingSquares(board);
+			List<Point> moves = piece.allPossibleLandingSquares(board);
 			for(Point move: moves){
 				Map<Point, Piece> mapNewBoard = new HashMap<>(pieces);
+				move = (Point) move.clone();
 				mapNewBoard = copyMap(mapNewBoard);
 				mapNewBoard.remove(piecePosition);
-				mapNewBoard.put(move, pieces.get(piecePosition));
+				piece.setPosition(move);
+				mapNewBoard.put(move, piece);
 
 				Board newBoard = getBoardFromPoints(mapNewBoard, board);
 				if(isValidBoard(newBoard))

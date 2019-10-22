@@ -91,14 +91,12 @@ public abstract class Piece {
 
     public abstract List<Point> allPossibleLandingSquares(Board board);
 
-    public boolean isOutOfBoard(Point movement) {
-        Point newPosition = getNewPositionAfterMovement(movement);
-        return (newPosition.getX() < 0 || newPosition.getY() > 7
+    public boolean isOutOfBoard(Point newPosition) {
+        return (newPosition.getX() < 0 || newPosition.getX() > 7
                 || newPosition.getY() < 0 || newPosition.getY() > 7);
     }
 
-    public boolean isPositionFriendly(Point movement, Board board) {
-        Point newPosition = getNewPositionAfterMovement(movement);
+    public boolean isPositionFriendly(Point newPosition, Board board) {
         return board.getPiece(newPosition) != null && board.getPiece(newPosition).getColor().equals(color);
     }
 
