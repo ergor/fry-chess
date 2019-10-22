@@ -8,10 +8,6 @@ import java.util.List;
 
 public class Knight extends Piece {
 
-	public Knight(Kind kind, Color color, Point position) {
-		super(kind, color, position);
-	}
-
 	public Knight(Color color, Point position) {
 		super(Kind.KNIGHT, color, position);
 	}

@@ -10,10 +10,6 @@ import java.util.stream.Stream;
 
 public class Queen extends Piece {
 
-	public Queen(Kind kind, Color color, Point position) {
-		super(kind, color, position);
-	}
-
 	public Queen(Color color, Point position) {
 		super(Kind.QUEEN, color, position);
 	}
