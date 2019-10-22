@@ -28,7 +28,7 @@ public class Board {
 		this.enPassant = enPassant;
 		this.castlingMoves = castlingMoves;
 		this.turn = turn;
-//		findCheck();
+		findCheck();
 	}
 
 	public Piece.Color getTurn() {
