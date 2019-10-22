@@ -8,10 +8,6 @@ import java.util.List;
 
 public class Pawn extends Piece{
 
-	public Pawn(Piece.Kind kind, Piece.Color color, Point position) {
-		super(kind, color, position);
-	}
-
 	public Pawn(Piece.Color color, Point position) {
 		super(Kind.PAWN, color, position);
 	}

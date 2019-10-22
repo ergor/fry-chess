@@ -8,10 +8,6 @@ import java.util.List;
 
 public class Rook extends Piece {
 
-	public Rook(Kind kind, Color color, Point position) {
-		super(kind, color, position);
-	}
-
 	public Rook(Color color, Point position) {
 		super(Kind.ROOK, color, position);
 	}

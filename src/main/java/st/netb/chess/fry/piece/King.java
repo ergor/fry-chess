@@ -8,10 +8,6 @@ import java.util.List;
 
 public class King extends Piece {
 
-	public King(Kind kind, Color color, Point position) {
-		super(kind, color, position);
-	}
-
 	public King(Color color, Point position) {
 		super(Kind.KING, color, position);
 	}
