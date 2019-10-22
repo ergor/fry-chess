@@ -23,8 +23,9 @@ class MiniMax{
                 bestMove.setScore(scoreBestBoard);
             };
         }
-        System.out.println(searchCount);
-        System.out.println(scoreBestBoard);
+        System.out.println("Searched nodes:   " + searchCount);
+        System.out.println("Minimax eval:     " + scoreBestBoard);
+        System.out.println("Evaluator score:  " + Evaluator.evaluateBoard(board));;
         return bestMove;
     }
     private static boolean isBest(int value, int compareTo, boolean isWhite){
