@@ -168,6 +168,7 @@ public class Board {
 			sb.append("\n");
 		}
 
+		sb.append("   +  -  -  -  -  -  -  -  -\n");
 		sb.append("     ");
 		String files = "abcdefgh";
 		for (int file = 0; file < 8; file++) {
