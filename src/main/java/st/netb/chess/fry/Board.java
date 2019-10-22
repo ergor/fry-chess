@@ -35,6 +35,17 @@ public class Board {
 		return turn;
 	}
 
+	public Piece.Color getNextTurn() {
+		switch (turn) {
+			case WHITE:
+				return Piece.Color.BLACK;
+			case BLACK:
+				return Piece.Color.WHITE;
+			default:
+				throw new IllegalStateException("somehow a color other than black or white exist");
+		}
+	}
+
 	public void setTurn(Piece.Color turn) {
 		this.turn = turn;
 	}

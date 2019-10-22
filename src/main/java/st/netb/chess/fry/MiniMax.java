@@ -2,6 +2,7 @@ package st.netb.chess.fry;
 
 import st.netb.chess.fry.piece.Piece;
 
+import java.rmi.UnexpectedException;
 import java.util.List;
 
 class MiniMax{
@@ -10,19 +11,20 @@ class MiniMax{
 
 
      public static Board getGoodMove(Board board){
-        List<Board> boards = BoardGenerator.getBoards(board);
-        Board bestMove = boards.get(0);
-        int scoreBestBoard = (board.getTurn() == Piece.Color.WHITE) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        List<Board> boardsNextTurn = BoardGenerator.getBoards(board);
 
-        for(Board b: boards) {
-            int val = minimax(b, depth, Integer.MIN_VALUE, Integer.MIN_VALUE, b.getTurn() == Piece.Color.WHITE);
-            if(isBest(val, scoreBestBoard, b.getTurn() == Piece.Color.WHITE)){
-                scoreBestBoard = val;
-                bestMove = b;
-                bestMove.setScore(scoreBestBoard);
-            };
+        boolean isWhite = board.getTurn() == Piece.Color.WHITE;
+        boolean isNextWhite = board.getNextTurn() == Piece.Color.WHITE;
+
+        for (Board b: boardsNextTurn) {
+            int val = minimax(b, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, isNextWhite);
+            b.setScore(val);
         }
-        return bestMove;
+
+        return boardsNextTurn.stream()
+                .reduce((res, elem) ->
+                        isBest(elem.getScore(), res.getScore(), isWhite) ? elem : res)
+                .orElseThrow(() -> new RuntimeException("a best board was not found"));
     }
     private static boolean isBest(int value, int compareTo, boolean isWhite){
         return (isWhite) ? value > compareTo : value < compareTo;
