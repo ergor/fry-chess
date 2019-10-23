@@ -75,13 +75,14 @@ class MiniMax{
     private static int minimax(Board board, int depth, int alpha, int beta, boolean isMax){
         searchCount++;
         int value;
-        List<Board> boards = BoardGenerator.getBoards(board);
-        if(depth == 0 || boards.size() == 0){//or node is terminal
+
+        //List<Board> boards = BoardGenerator.getBoards(board);
+        if(depth == 0 || !board.iterator().hasNext()){//or node is terminal
             return Evaluator.evaluateBoard(board);
         }
         if(isMax){
             value = Integer.MIN_VALUE;
-            for(Board childBoard: boards){
+            for(Board childBoard: board){
                 int newValue = minimax(childBoard, depth -1, alpha, beta, false);
                 value = Math.max(newValue, value);
                 if(newValue >= beta){
@@ -92,7 +93,7 @@ class MiniMax{
         }
         else{
             value = Integer.MAX_VALUE;
-            for(Board childBoard: boards){
+            for(Board childBoard: board){
                 int newValue = minimax(childBoard, depth -1, alpha, beta, true);
                 value = Math.min(newValue, value);
                 if(newValue >= alpha){

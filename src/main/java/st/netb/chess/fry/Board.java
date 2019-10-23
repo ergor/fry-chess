@@ -10,7 +10,7 @@ import java.awt.Point;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Board extends PieceMap {
+public class Board extends PieceMap implements Iterable<Board> {
 
 	private Check check;
 	private Point enPassant;
@@ -45,6 +45,16 @@ public class Board extends PieceMap {
 
 	public void setTurn(Piece.Color turn) {
 		this.turn = turn;
+	}
+
+	/**
+	 * Returns an iterator over elements of type {@code T}.
+	 *
+	 * @return an Iterator.
+	 */
+	@Override
+	public Iterator<Board> iterator() {
+		return new BoardIterator(this);
 	}
 
 	public enum Check {
