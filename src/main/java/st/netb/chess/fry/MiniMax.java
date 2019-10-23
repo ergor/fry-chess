@@ -6,7 +6,7 @@ import java.util.List;
 
 class MiniMax{
 
-    private static int depth = 5;
+    private static int depth = 3;
 
     private static int searchCount = 0;
 
@@ -26,8 +26,9 @@ class MiniMax{
                         isBest(elem.getScore(), res.getScore(), isWhite) ? elem : res)
                 .orElseThrow(() -> new RuntimeException("a best board was not found"));
 
-        System.out.println(searchCount);
-        System.out.println(bestBoard.getScore());
+        System.out.println("Searched nodes:   " + searchCount);
+        System.out.println("Minimax eval:     " + bestBoard.getScore());
+        System.out.println("Evaluator score:  " + Evaluator.evaluateBoard(board));
 
         return bestBoard;
     }
