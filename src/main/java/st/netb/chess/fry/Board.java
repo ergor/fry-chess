@@ -7,28 +7,25 @@ import st.netb.chess.lib.FenException;
 
 
 import java.awt.Point;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class Board {
+public class Board extends PieceMap {
 
-	private Map<Point, Piece> pieces;
 	private Check check;
 	private Point enPassant;
 	private int score;
 	private List<Fen.CastlingMoves> castlingMoves;
 	private Piece.Color turn;
 
-	public Board(Map<Point, Piece> pieces, Check check, Point enPassant, List<Fen.CastlingMoves> castlingMoves, Piece.Color turn) {
-		this.pieces = pieces;
+	public Board(List<Piece> pieces, Check check, Point enPassant, int score, List<Fen.CastlingMoves> castlingMoves, Piece.Color turn) {
+		pieces.forEach(this::putPiece);
 		this.check = check;
 		this.enPassant = enPassant;
+		this.score = score;
 		this.castlingMoves = castlingMoves;
 		this.turn = turn;
-		findCheck();
+		//findCheck();
 	}
 
 	public Piece.Color getTurn() {
@@ -54,18 +51,6 @@ public class Board {
 		WHITE_CHECK,
 		BLACK_CHECK,
 		NO_CHECK
-	}
-
-	public Piece getPiece(Point position) {
-		return pieces.get(position);
-	}
-
-	public Map<Point, Piece> getPieces() {
-		return pieces;
-	}
-
-	public void setPieces(Map<Point, Piece> pieces) {
-		this.pieces = pieces;
 	}
 
 	public Check getCheck() {
@@ -103,16 +88,17 @@ public class Board {
 	public static Board getStartingBoard() throws FenException {
 		Fen fen = new Fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 		return new Board(
-				fen.getPieces().stream().collect(Collectors.toMap(st.netb.chess.lib.Piece::getPosition, Piece::mapFromLibPiece)),
+				fen.getPieces().stream().map(Piece::mapFromLibPiece).collect(Collectors.toList()),
 				Check.NO_CHECK,
 				fen.getEnPassant(),
+				0,
 				fen.getCastlingAvailability(),
 				Piece.mapFromLibColor(fen.getActiveColor()));
 	}
 
 	private void findCheck(){
-		Optional<Piece> king = getPieces().values().stream().filter(e -> e.getKind() == Piece.Kind.KING && e.getColor() !=  this.getTurn()).findAny();
-		Optional<Piece> otherKing = getPieces().values().stream().filter(e -> e.getKind() == Piece.Kind.KING && e.getColor() ==  this.getTurn()).findAny();
+		Optional<Piece> king = getPieces().stream().filter(e -> e.getKind() == Piece.Kind.KING && e.getColor() !=  this.getTurn()).findAny();
+		Optional<Piece> otherKing = getPieces().stream().filter(e -> e.getKind() == Piece.Kind.KING && e.getColor() ==  this.getTurn()).findAny();
 		Point positionKing = null;
 		Point positionOtherKing = null;
 		if(king.isPresent()){
@@ -122,7 +108,7 @@ public class Board {
 			positionOtherKing = otherKing.get().getPosition();
 		}
 
-		for(Piece piece: getPieces().values()){
+		for (Piece piece: getPieces()) {
 			for(Point point: piece.allPossibleLandingSquares(this)){
 				if(point.equals(positionKing)){
 					if(this.turn == Piece.Color.BLACK){
@@ -191,19 +177,44 @@ public class Board {
 	}
 	@Override
 	public Board clone(){
-		Map<Point, Piece> pieces = new HashMap<>();
 		Check check = this.check;
-		Point enPassant = this.enPassant;
+		Point enPassant = this.enPassant == null ? null : this.enPassant.getLocation(); // getLocation == clone
 		int score = this.score;
-		List<Fen.CastlingMoves> castlingMoves = this.castlingMoves;
+		List<Fen.CastlingMoves> castlingMoves = new ArrayList<>(this.castlingMoves);
 		Piece.Color turn = this.turn;
-		for(Point point: this.pieces.keySet()){
-			Piece p = this.pieces.get(point);
-			Piece clonedPiece = p.clone();
-			pieces.put(point, clonedPiece);
-		}
+		List<Piece> clonedPieces = this.getPieces().stream()
+				.map(Piece::clone)
+				.collect(Collectors.toList());
 
-		return new Board(pieces, check, enPassant, castlingMoves, turn);
+		return new Board(clonedPieces, check, enPassant, score, castlingMoves, turn);
+	}
+}
+
+abstract class PieceMap {
+	private Map<Point, Piece> pieceMap = new HashMap<>();
+
+	public Piece getPiece(Point position) {
+		return pieceMap.get(position);
 	}
 
+	public Piece yankPiece(Point position) {
+		return pieceMap.remove(position);
+	}
+
+	public Collection<Piece> getPieces() {
+		return pieceMap.values();
+	}
+
+	public Set<Point> getPositions() {
+		return pieceMap.keySet();
+	}
+
+	public void putPieceSetPosition(Point position, Piece piece) {
+		piece.setPosition(position);
+		pieceMap.put(position, piece);
+	}
+
+	public void putPiece(Piece piece) {
+		pieceMap.put(piece.getPosition(), piece);
+	}
 }

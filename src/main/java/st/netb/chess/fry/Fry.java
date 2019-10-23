@@ -43,7 +43,7 @@ public class Fry {
 	}
 
 	private static Board doMove(String input, Board initialBoard, Piece.Color turn) {
-		// stuff;
+
 		San san = San.parse(input).orElseThrow(IllegalArgumentException::new);
 		List<Point> startPositions = applySan(san, initialBoard);
 		if (startPositions.size() == 0) {
@@ -54,20 +54,16 @@ public class Fry {
 			System.out.println("Ambigous move");
 			return initialBoard;
 		}
+
+		Board newBoard = initialBoard.clone();
 		Point startPosition = startPositions.get(0);
-
-		Map<Point, Piece> pieces = initialBoard.getPieces().keySet().stream()
-				.filter(pos -> !pos.equals(startPosition))
-				.collect(Collectors.toMap(Function.identity(), pos -> initialBoard.getPieces().get(pos).clone()));
-
-		Piece movedPiece = initialBoard.getPiece(startPosition).clone();
-		movedPiece.setPosition(san.getEndPos());
-		pieces.put(san.getEndPos(), movedPiece);
-
-		Piece.Color nextPlayer = turn == Piece.Color.WHITE ? Piece.Color.BLACK : Piece.Color.WHITE;
+		Piece movedPiece = newBoard.yankPiece(startPosition);
 
 		// TODO: initialize properly
-		return new Board(pieces, Board.Check.NO_CHECK, null, initialBoard.getCastlingMoves(), nextPlayer);
+		newBoard.putPieceSetPosition(san.getEndPos(), movedPiece);
+		newBoard.setTurn(initialBoard.getNextTurn());
+
+		return newBoard;
 	}
 
 
@@ -75,15 +71,15 @@ public class Fry {
 
 		//TODO: castling moves, checks/mates, etc
 
-		Map<Point, Piece> candidatePieces = initialBoard.getPieces().entrySet().stream()
-				.filter(e -> sanMove.getStartFile() < 0 || e.getKey().getX() == sanMove.getStartFile())
-				.filter(e -> sanMove.getStartRank() < 0 || e.getKey().getY() == sanMove.getStartRank())
-				.filter(e -> e.getValue().getKind() == mapFromLibKind(sanMove.getPiece()))
-				.filter(e -> e.getValue().getColor() == initialBoard.getTurn())
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		List<Piece> candidatePieces = initialBoard.getPieces().stream()
+				.filter(piece -> sanMove.getStartFile() < 0 || piece.getPosition().x == sanMove.getStartFile())
+				.filter(piece -> sanMove.getStartRank() < 0 || piece.getPosition().y == sanMove.getStartRank())
+				.filter(piece -> piece.getKind() == mapFromLibKind(sanMove.getPiece()))
+				.filter(piece -> piece.getColor() == initialBoard.getTurn())
+				.collect(Collectors.toList());
 
 		List<Point> startPositions = new ArrayList<>();
-		for (Piece piece : candidatePieces.values()) {
+		for (Piece piece : candidatePieces) {
 			if (piece.allPossibleLandingSquares(initialBoard).stream()
 					.anyMatch(pos -> pos.equals(sanMove.getEndPos()))) {
 				startPositions.add(piece.getPosition());

@@ -18,7 +18,7 @@ public class Knight extends Piece {
 		allowedMovements.add(new Point(1, 2));
 		allowedMovements.add(new Point(1, -2));
 		allowedMovements.add(new Point(-1, 2));
-		allowedMovements.add(new Point(1, -2));
+		allowedMovements.add(new Point(-1, -2));
 		allowedMovements.add(new Point(2, 1));
 		allowedMovements.add(new Point(2, -1));
 		allowedMovements.add(new Point(-2, 1));

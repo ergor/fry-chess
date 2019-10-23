@@ -28,7 +28,7 @@ class MiniMax{
 
         System.out.println("Searched nodes:   " + searchCount);
         System.out.println("Minimax eval:     " + bestBoard.getScore());
-        System.out.println("Evaluator score:  " + Evaluator.evaluateBoard(board));
+        System.out.println("Evaluator score:  " + Evaluator.evaluateBoard(bestBoard));
 
         return bestBoard;
     }

@@ -5,7 +5,6 @@ import st.netb.chess.fry.Board;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public abstract class Piece {
 
@@ -100,17 +99,19 @@ public abstract class Piece {
         return board.getPiece(newPosition) != null && board.getPiece(newPosition).getColor().equals(color);
     }
 
+    public boolean isPositionEnemy(Point newPosition, Board board) {
+        return board.getPiece(newPosition) != null && !board.getPiece(newPosition).getColor().equals(color);
+    }
+
+    public boolean isPositionEmpty(Point newPosition, Board board) {
+        return board.getPiece(newPosition) == null;
+    }
+
     public Point getNewPositionAfterMovement(Point movement) {
         int newX = (int) (position.getX() + movement.getX());
         int newY = (int) ((int) position.getY() + movement.getY());
         return new Point(newX, newY);
     }
-
-    public boolean isPositionEnemy(Point movement, Board board) {
-        Point newPosition = getNewPositionAfterMovement(movement);
-        return board.getPiece(newPosition) != null && !board.getPiece(newPosition).getColor().equals(color);
-    }
-
 
     public enum Direction{
         left(new Point(-1, 0)),
@@ -150,21 +151,21 @@ public abstract class Piece {
     @Override
     public Piece clone() {
         Point newPoint = new Point(this.position.x, this.position.y);
-       switch (this.kind) {
-           case PAWN:
-               return new Pawn(this.color, newPoint);
-           case BISHOP:
-               return new Bishop(this.color, newPoint);
-           case KNIGHT:
-               return new Knight(this.color, newPoint);
-           case ROOK:
-               return new Rook(this.color, newPoint);
-           case QUEEN:
-               return new Queen(this.color, newPoint);
-           case KING:
-               return new King(this.color, newPoint);
-           default:
-               throw new IllegalStateException("Kinds was exhausted");
-       }
+        switch (this.kind) {
+            case PAWN:
+                return new Pawn(this.color, newPoint);
+            case BISHOP:
+                return new Bishop(this.color, newPoint);
+            case KNIGHT:
+                return new Knight(this.color, newPoint);
+            case ROOK:
+                return new Rook(this.color, newPoint);
+            case QUEEN:
+                return new Queen(this.color, newPoint);
+            case KING:
+                return new King(this.color, newPoint);
+            default:
+                throw new IllegalStateException("Kinds was exhausted");
+        }
     }
 }

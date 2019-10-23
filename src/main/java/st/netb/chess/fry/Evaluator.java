@@ -72,7 +72,7 @@ public class Evaluator {
 
 	public static int getPiecesScoreOfColor(Board board, Piece.Color color) {
 		int[][] pawnPos = color == Piece.Color.WHITE ? pawnposWhite : pawnposBlack;
-		return board.getPieces().values().stream()
+		return board.getPieces().stream()
 				.filter(piece -> piece.getColor() == color)
 				.mapToInt(piece -> {
 					switch(piece.getKind()) {
