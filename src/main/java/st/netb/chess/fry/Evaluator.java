@@ -63,11 +63,10 @@ public class Evaluator {
 			};
 
 	public static int evaluateBoard(Board board) {
-		Piece.Color colorToMove = board.getTurn();
-		int playerScore = getPiecesScoreOfColor(board, colorToMove);
-		int opponentScore = getPiecesScoreOfColor(board, colorToMove == Piece.Color.WHITE ? Piece.Color.BLACK : Piece.Color.WHITE);
+		int whiteScore = getPiecesScoreOfColor(board, Piece.Color.WHITE);
+		int blackScore = getPiecesScoreOfColor(board, Piece.Color.BLACK);
 
-		return playerScore - opponentScore;
+		return whiteScore - blackScore;
 	}
 
 	public static int getPiecesScoreOfColor(Board board, Piece.Color color) {
