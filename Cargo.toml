@@ -1,7 +1,8 @@
 [package]
 name = "fry-chess"
 version = "0.1.0"
-authors = ["erol"]
+authors = ["erol", "stian"]
 edition = "2018"
 
 [dependencies]
+san-rs = "0"
