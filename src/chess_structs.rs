@@ -24,7 +24,7 @@ pub struct Board {
 }
 
 #[derive(Copy, Clone)]
-pub enum Piece {
+pub enum Kind {
     Pawn(Color),
     Bishop(Color),
     Knight(Color),
@@ -32,4 +32,10 @@ pub enum Piece {
     King(Color),
     Queen(Color),
     Empty,
+}
+
+#[derive(Copy, Clone)]
+pub struct Piece{
+    kind: Kind,
+    color: Color
 }
