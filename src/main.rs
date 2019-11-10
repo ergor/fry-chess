@@ -1,4 +1,5 @@
 mod chess_structs;
+mod generator;
 
 use san_rs::*;
 use chess_structs::*;
