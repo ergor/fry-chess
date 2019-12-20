@@ -1,27 +1,25 @@
 use std::iter::Iterator;
-use crate::chess_structs::{Board, Index2D, Piece, Color, Kind};
+use crate::chess_structs::{Board, Index2D, Piece, Kind};
 
 // idea: generate most likely board first, specific for black and white
 // TODO fix grid index directions x y
 
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 struct MoveItr {
     board: Board,
-    itr: dyn Iterator<Item = Board>,
     x: usize,
     y: usize,
 }
 impl MoveItr {
-    pub fn new(board:Board) -> MoveItr{
-        MoveItr{
+    pub fn new(board:Board) -> MoveItr {
+        MoveItr {
             board,
-            itr: self::next_itr(),
             x: 0,
             y: 0
         }
     }
-    fn inc_pos(&mut self){
+    fn inc_pos( mut self) {
         if self.x < 8 {
             self.x += 1;
         }
@@ -30,55 +28,33 @@ impl MoveItr {
             self.y += 1;
         }
     }
-     fn next_itr(&mut self) {
-         self.itr = match self.board[self.x][self.y] {
-             Some(piece) => {
-                 match piece.kind {
-                     _ => KingItr::new(self.board, Index2D{x, y})
-                 };
-             },
-             None => self.itr = self.next_itr()
-         }
-     }
 }
 
 impl Iterator for MoveItr {
-    type Item = Board;
+    type Item = Box<dyn Iterator<Item = Board>>;
 
-    fn next(&mut self) -> Option<Board> {
-        let x = self.x;
-        let y = self.y;
-        if y > 8 {
-            None
-        }else {
-            let piece = match self.board.squares[x][y] {
-                Some(piece) => {
+    fn next(&mut self) -> Option<Box<dyn Iterator<Item=Board>>> {
+         if self.x == 8 && self.y == 8 {
+                None
+         } else {
+             self.inc_pos();
+             match self.board.squares[self.x][self.y] {
+                 Some(piece) => {
+                     match piece.kind {
+                         _ => {
+                             let gg = KingItr::new(self.board, Index2D{x: self.x, y: self.y});
+                             Some(Box::new(gg))
+                         }
+                     }
+                 },
+                 None => {
+                     self.inc_pos();
+                     self.next()
+                 }
+             }
 
-                },
-                None => self.next()
-            };
-            match self.board.squares[x][y].kind {
-                Pawn => self.next(),
-                Bishop => self.next(),
-                Knight => {
-                    let mut king_itr = KingItr::new(self.board, Index2D{x, y});
-                    let next_board = king_itr.next();
-                    match next_board {
-                        Some(_) => next_board,
-                        None => {
-                            self.inc_pos();
-                            self.next()
-                        }
-                    }
-                },
-                Rook => self.next(),
-                King => self.next(),
-                Queen => self.next(),
-                _ => self.next()
-            }
-        }
+         }
     }
-
 }
 
 #[derive(Clone)]

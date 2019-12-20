@@ -25,7 +25,7 @@ pub struct Board {
 
 impl Board {
     pub fn get_next_turn(&mut self) -> Color {
-        if self.color == Color::White {
+        if self.turn == Color::White {
             Color::Black
         }else {
             Color::White

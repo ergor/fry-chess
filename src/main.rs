@@ -1,10 +1,9 @@
 mod chess_structs;
 mod generator;
 
-use san_rs::*;
-use chess_structs::*;
-use chess_structs::Piece::*;
-use chess_structs::Color::*;
+//use san_rs::*;
+//use chess_structs::*;
+//use chess_structs::Color::*;
 
 fn main() {
 //    let board1 = Board{
