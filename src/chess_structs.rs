@@ -36,12 +36,12 @@ impl Board {
 #[derive(Copy, Clone, PartialEq)]
 pub enum Kind {
     Pawn,
-    Bishop,
-    Knight,
-    Rook,
+    _Bishop,
+    _Knight,
+    _Rook,
     King,
-    Queen,
-    Empty,
+    _Queen,
+    _Empty,
 }
 
 #[derive(Copy, Clone)]

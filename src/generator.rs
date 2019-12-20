@@ -1,5 +1,5 @@
 use std::iter::Iterator;
-use crate::chess_structs::{Board, Index2D, Piece, Kind};
+use crate::chess_structs::{Board, Index2D };
 
 // idea: generate most likely board first, specific for black and white
 // TODO fix grid index directions x y
@@ -19,8 +19,8 @@ impl MoveItr {
             y: 0
         }
     }
-    fn inc_pos( mut self) {
-        if self.x < 8 {
+    fn inc_pos(&mut self) {
+        if self.x < 7 {
             self.x += 1;
         }
         else {
@@ -34,10 +34,11 @@ impl Iterator for MoveItr {
     type Item = Box<dyn Iterator<Item = Board>>;
 
     fn next(&mut self) -> Option<Box<dyn Iterator<Item=Board>>> {
-         if self.x == 8 && self.y == 8 {
+        self.inc_pos();
+        println!("self x:{}   y:{}", self.x, self.y);
+         if self.y > 7 {
                 None
          } else {
-             self.inc_pos();
              match self.board.squares[self.x][self.y] {
                  Some(piece) => {
                      match piece.kind {
@@ -48,11 +49,9 @@ impl Iterator for MoveItr {
                      }
                  },
                  None => {
-                     self.inc_pos();
                      self.next()
                  }
              }
-
          }
     }
 }
@@ -134,7 +133,7 @@ pub fn create_new_board(board: Board, from: Index2D, to: Index2D) -> Board {
     board
 }
 
-pub fn is_legal_move(board: Board, from: Index2D, to: Index2D) -> bool {
+pub fn is_legal_move(board: Board, _from: Index2D, to: Index2D) -> bool {
     match board.squares[to.y][to.x] {
         Some(piece) =>  piece.color != board.turn,
         None => true
@@ -145,8 +144,10 @@ pub fn is_out_of_board(new_pos:Index2D) -> bool {
     let x = new_pos.x;
     let y = new_pos.y;
 
-    if x < 0 || x > 8 ||
-        y < 0 || y > 8 {
+//    if x < 0 || x > 8 ||
+//    y < 0 || y > 8 {
+        if x > 8 ||
+        y > 8 {
         true
     } else {
         false
@@ -191,17 +192,14 @@ mod tests {
         assert!(king_itr.next().is_some());
         assert!(king_itr.next().is_none());
 
+        let mut new_board:Option<Board> = None;
 
         let mut move_itr = MoveItr::new(board);
-        assert!(move_itr.next().is_some());
-        assert!(move_itr.next().is_some());
-        assert!(move_itr.next().is_some());
-        assert!(move_itr.next().is_some());
-        assert!(move_itr.next().is_some());
-        assert!(move_itr.next().is_some());
-        assert!(move_itr.next().is_some());
-        assert!(move_itr.next().is_some());
-        assert!(move_itr.next().is_none());
+        if let Some(mut i) = move_itr.next() {
+            let mut itr = i.as_mut();
+            new_board = itr.next();
+        }
 
+        assert!(new_board.is_some());
     }
 }
