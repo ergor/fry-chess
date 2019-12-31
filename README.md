@@ -1,6 +1,7 @@
 ## fry
 The Fry chess engine
 
+This repo is now archived. The new repo is [ergor/fry](https://github.com/ergor/fry)
 
 ```
 
